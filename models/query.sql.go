@@ -10,7 +10,7 @@ import (
 )
 
 const getOrganizationList = `-- name: GetOrganizationList :many
-SELECT id, name, full_name, description, email, avatar_url, website_url, github_url, github_updated_at, github_created_at, created_at, updated_at, deleted_at FROM "organizations"
+SELECT id, name, full_name, description, email, url, avatar_url, website_url, github_updated_at, github_created_at, created_at, updated_at, deleted_at FROM "organizations"
 `
 
 func (q *Queries) GetOrganizationList(ctx context.Context) ([]Organization, error) {
@@ -28,9 +28,9 @@ func (q *Queries) GetOrganizationList(ctx context.Context) ([]Organization, erro
 			&i.FullName,
 			&i.Description,
 			&i.Email,
+			&i.Url,
 			&i.AvatarUrl,
 			&i.WebsiteUrl,
-			&i.GithubUrl,
 			&i.GithubUpdatedAt,
 			&i.GithubCreatedAt,
 			&i.CreatedAt,

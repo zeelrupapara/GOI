@@ -32,7 +32,7 @@ type Assignee struct {
 type Branch struct {
 	ID           string         `json:"id"`
 	Name         sql.NullString `json:"name"`
-	Url          string         `json:"url"`
+	Url          sql.NullString `json:"url"`
 	RepositoryID string         `json:"repository_id"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
@@ -44,8 +44,8 @@ type Collaborator struct {
 	Name            sql.NullString `json:"name"`
 	Username        string         `json:"username"`
 	Email           sql.NullString `json:"email"`
+	Url             sql.NullString `json:"url"`
 	AvatarUrl       sql.NullString `json:"avatar_url"`
-	GithubUrl       string         `json:"github_url"`
 	WebsiteUrl      sql.NullString `json:"website_url"`
 	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
 	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
@@ -55,31 +55,31 @@ type Collaborator struct {
 }
 
 type Commit struct {
-	ID            string         `json:"id"`
-	Message       sql.NullString `json:"message"`
-	BranchID      string         `json:"branch_id"`
-	AuthorID      string         `json:"author_id"`
-	Url           sql.NullString `json:"url"`
-	CommitUrl     sql.NullString `json:"commit_url"`
-	CommittedTime sql.NullTime   `json:"committed_time"`
-	CreatedAt     time.Time      `json:"created_at"`
-	UpdatedAt     time.Time      `json:"updated_at"`
-	DeletedAt     sql.NullTime   `json:"deleted_at"`
+	ID                  string         `json:"id"`
+	Message             sql.NullString `json:"message"`
+	BranchID            string         `json:"branch_id"`
+	AuthorID            string         `json:"author_id"`
+	Url                 sql.NullString `json:"url"`
+	CommitUrl           sql.NullString `json:"commit_url"`
+	GithubCommittedTime sql.NullTime   `json:"github_committed_time"`
+	CreatedAt           time.Time      `json:"created_at"`
+	UpdatedAt           time.Time      `json:"updated_at"`
+	DeletedAt           sql.NullTime   `json:"deleted_at"`
 }
 
 type Issue struct {
-	ID              string       `json:"id"`
-	Title           string       `json:"title"`
-	Status          string       `json:"status"`
-	Url             string       `json:"url"`
-	AuthorID        string       `json:"author_id"`
-	RepositoryID    string       `json:"repository_id"`
-	ClosedAt        sql.NullTime `json:"closed_at"`
-	GithubCreatedAt sql.NullTime `json:"github_created_at"`
-	GithubUpdatedAt sql.NullTime `json:"github_updated_at"`
-	CreatedAt       time.Time    `json:"created_at"`
-	UpdatedAt       time.Time    `json:"updated_at"`
-	DeletedAt       sql.NullTime `json:"deleted_at"`
+	ID              string         `json:"id"`
+	Title           string         `json:"title"`
+	Status          string         `json:"status"`
+	Url             sql.NullString `json:"url"`
+	AuthorID        string         `json:"author_id"`
+	RepositoryID    string         `json:"repository_id"`
+	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
+	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       sql.NullTime   `json:"deleted_at"`
 }
 
 type Labal struct {
@@ -96,9 +96,9 @@ type Organization struct {
 	FullName        sql.NullString `json:"full_name"`
 	Description     sql.NullString `json:"description"`
 	Email           sql.NullString `json:"email"`
+	Url             sql.NullString `json:"url"`
 	AvatarUrl       sql.NullString `json:"avatar_url"`
 	WebsiteUrl      sql.NullString `json:"website_url"`
-	GithubUrl       sql.NullString `json:"github_url"`
 	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
 	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
 	CreatedAt       time.Time      `json:"created_at"`
@@ -123,8 +123,8 @@ type PullRequest struct {
 	IsDraft         sql.NullBool   `json:"is_draft"`
 	AuthorID        string         `json:"author_id"`
 	RepositoryID    string         `json:"repository_id"`
-	ClosedAt        sql.NullTime   `json:"closed_at"`
-	MergedAt        sql.NullTime   `json:"merged_at"`
+	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
+	GithubMergedAt  sql.NullTime   `json:"github_merged_at"`
 	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
 	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
 	CreatedAt       time.Time      `json:"created_at"`

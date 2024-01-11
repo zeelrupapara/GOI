@@ -1,12 +1,12 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS "repositories" (
   "id" VARCHAR (50) PRIMARY KEY NOT NULL,
-  "name" VARCHAR (50),
-  "name_with_owner" VARCHAR (50),
+  "name" VARCHAR (100),
+  "name_with_owner" VARCHAR (255),
   "is_private" BOOLEAN,
   "default_branch" VARCHAR,
-  "url" VARCHAR,
-  "homepage_url" VARCHAR,
+  "url" TEXT,
+  "homepage_url" TEXT,
   "open_issues" VARCHAR,
   "closed_issues" VARCHAR,
   "open_pr" INTEGER,
