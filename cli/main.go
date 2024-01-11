@@ -10,9 +10,9 @@ import (
 func Init(cfg config.AppConfig, logger *zap.Logger) error {
 	migrationCmd := GetMigrationCommandDef(cfg)
 	APICmd := GetAPICommandDef(cfg, logger)
-
+	githubCmd := GetGithubCommandDef(cfg, logger)
 	// use is stands for a binary after build a golang app
 	rootCmd := &cobra.Command{Use: "GPAT"}
-	rootCmd.AddCommand(&migrationCmd, &APICmd)
+	rootCmd.AddCommand(&migrationCmd, &APICmd, &githubCmd)
 	return rootCmd.Execute()
 }
