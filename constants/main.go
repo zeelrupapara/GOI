@@ -1,7 +1,9 @@
 package constants
 
 // variables
-const ()
+const (
+	DefaultLimit uint8 = 100
+)
 
 // fiber contexts
 const ()

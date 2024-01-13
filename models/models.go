@@ -92,10 +92,11 @@ type Labal struct {
 
 type Organization struct {
 	ID              string         `json:"id"`
-	Name            string         `json:"name"`
-	FullName        sql.NullString `json:"full_name"`
-	Description     sql.NullString `json:"description"`
+	Login           string         `json:"login"`
+	Name            sql.NullString `json:"name"`
 	Email           sql.NullString `json:"email"`
+	Location        sql.NullString `json:"location"`
+	Description     sql.NullString `json:"description"`
 	Url             sql.NullString `json:"url"`
 	AvatarUrl       sql.NullString `json:"avatar_url"`
 	WebsiteUrl      sql.NullString `json:"website_url"`
