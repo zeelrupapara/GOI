@@ -146,7 +146,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		}
 
 		for _, repo := range pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository {
-			
+
 			for _, prContribution := range repo.Contributions.Nodes {
 				// fmt.Println(prContribution.PullRequest.Title)
 

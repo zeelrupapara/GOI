@@ -27,3 +27,24 @@ func (q *Queries) GetOrgMemberByID(ctx context.Context, arg GetOrgMemberByIDPara
 	err := row.Scan(&id)
 	return id, err
 }
+
+const insertOrgMember = `-- name: InsertOrgMember :one
+INSERT INTO "organization_collaborators" (
+        "organization_id",
+        "collaborator_id"
+    )
+VALUES ($1, $2)
+RETURNING organization_collaborators.id
+`
+
+type InsertOrgMemberParams struct {
+	OrganizationID string `json:"organization_id"`
+	CollaboratorID string `json:"collaborator_id"`
+}
+
+func (q *Queries) InsertOrgMember(ctx context.Context, arg InsertOrgMemberParams) (string, error) {
+	row := q.db.QueryRowContext(ctx, insertOrgMember, arg.OrganizationID, arg.CollaboratorID)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}

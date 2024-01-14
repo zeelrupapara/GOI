@@ -2,10 +2,12 @@ package github
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"time"
 
 	"github.com/Improwised/GPAT/constants"
+	"github.com/Improwised/GPAT/models"
 	"github.com/shurcooL/githubv4"
 )
 
@@ -52,6 +54,45 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 
 		for _, member := range memberQ.Organization.MembersWithRole.Nodes {
 			fmt.Println(">>>>>>Member:", member.Login)
+			memID, err := github.model.GetMemberByLogin(github.ctx, member.Login)
+			if err != nil {
+				return err
+			}
+			if memID == "" {
+				_, err := github.model.InsertMember(github.ctx, models.InsertMemberParams{
+					ID:              member.ID,
+					Login:           member.Login,
+					Name:            sql.NullString{String: member.Name, Valid: true},
+					Email:           sql.NullString{String: member.Email, Valid: true},
+					Url:             sql.NullString{String: member.URL, Valid: true},
+					AvatarUrl:       sql.NullString{String: member.AvatarURL, Valid: true},
+					WebsiteUrl:      sql.NullString{String: member.WebsiteURL, Valid: true},
+					GithubCreatedAt: sql.NullTime{Time: member.GithubCreatedAt, Valid: true},
+					GithubUpdatedAt: sql.NullTime{Time: member.GithubUpdatedAt, Valid: true},
+				})
+				if err != nil {
+					return err
+				}
+			}
+
+			// Check OrgMember Exist
+			orgMemID, err := github.model.GetOrgMemberByID(github.ctx, models.GetOrgMemberByIDParams{
+				OrganizationID: org.ID,
+				CollaboratorID: member.ID,
+			})
+			if err != nil {
+				return err
+			}
+			if orgMemID == "" {
+				_, err = github.model.InsertOrgMember(github.ctx, models.InsertOrgMemberParams{
+					OrganizationID: org.ID,
+					CollaboratorID: member.ID,
+				})
+				if err != nil {
+					return err
+				}
+			}
+
 			orgMember := GithubOrgMemberArgs{
 				ID:     org.ID,
 				Login:  org.Login,
