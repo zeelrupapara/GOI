@@ -17,3 +17,7 @@ INSERT INTO "organizations" (
     )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING organizations.id;
+-- name: GetOrganizationByLogin :one
+SELECT organizations.id
+FROM "organizations"
+WHERE login = $1;

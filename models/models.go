@@ -41,8 +41,8 @@ type Branch struct {
 
 type Collaborator struct {
 	ID              string         `json:"id"`
+	Login           string         `json:"login"`
 	Name            sql.NullString `json:"name"`
-	Username        string         `json:"username"`
 	Email           sql.NullString `json:"email"`
 	Url             sql.NullString `json:"url"`
 	AvatarUrl       sql.NullString `json:"avatar_url"`
@@ -136,7 +136,6 @@ type PullRequest struct {
 type Repository struct {
 	ID                         string         `json:"id"`
 	Name                       sql.NullString `json:"name"`
-	NameWithOwner              sql.NullString `json:"name_with_owner"`
 	IsPrivate                  sql.NullBool   `json:"is_private"`
 	DefaultBranch              sql.NullString `json:"default_branch"`
 	Url                        sql.NullString `json:"url"`

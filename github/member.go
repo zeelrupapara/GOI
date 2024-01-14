@@ -51,7 +51,16 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 		}
 
 		for _, member := range memberQ.Organization.MembersWithRole.Nodes {
-			fmt.Println("Member:", member.Login)
+			fmt.Println(">>>>>>Member:", member.Login)
+			orgMember := GithubOrgMemberArgs{
+				ID:     org.ID,
+				Login:  org.Login,
+				Member: member,
+			}
+			err = github.LoadRepo(orgMember)
+			if err != nil {
+				return err
+			}
 		}
 
 		// Check for pagination

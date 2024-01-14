@@ -10,6 +10,19 @@ import (
 	"database/sql"
 )
 
+const getOrganizationByLogin = `-- name: GetOrganizationByLogin :one
+SELECT organizations.id
+FROM "organizations"
+WHERE login = $1
+`
+
+func (q *Queries) GetOrganizationByLogin(ctx context.Context, login string) (string, error) {
+	row := q.db.QueryRowContext(ctx, getOrganizationByLogin, login)
+	var id string
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getOrganizationList = `-- name: GetOrganizationList :many
 SELECT id, login, name, email, location, description, url, avatar_url, website_url, github_updated_at, github_created_at, created_at, updated_at, deleted_at
 FROM "organizations"

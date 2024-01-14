@@ -56,7 +56,7 @@ func (github *GithubService) LoadOrganizations() error {
 		}
 
 		for _, org := range organizationQ.Viewer.Organizations.Nodes {
-			fmt.Println("Login:", org.Login)
+			fmt.Println("=============Login:", org.Login, "============")
 			github.LoadMembers(org)
 			// organization := models.InsertOrganizationParams{
 			// 	ID:              org.ID,
