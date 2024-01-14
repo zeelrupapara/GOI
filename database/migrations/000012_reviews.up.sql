@@ -4,9 +4,9 @@ CREATE TABLE IF NOT EXISTS "reviews" (
   "reviewer_id" VARCHAR NOT NULL,
   "pr_id" VARCHAR  NOT NULL,
   "status" VARCHAR NOT NULL,
-  "github_created_at" VARCHAR,
-  "github_updated_at" VARCHAR,
-  "github_submitted_at" VARCHAR,
+  "github_created_at" TIMESTAMP,
+  "github_updated_at" TIMESTAMP,
+  "github_submitted_at" TIMESTAMP,
   "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "updated_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "deleted_at" TIMESTAMP

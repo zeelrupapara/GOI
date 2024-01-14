@@ -5,9 +5,10 @@ import (
 )
 
 type GithubOrgMemberArgs struct {
-	ID     string
-	Login  string
-	Member GithubMemberQ
+	ID       string
+	Login    string
+	Member   GithubMemberQ
+	OrgMemID string
 }
 
 type GithubRepoQ struct {
@@ -38,7 +39,6 @@ type GithubRepoQ struct {
 		TotalCount int
 	} `graphql:"mergedPRs: pullRequests(states: MERGED)"`
 }
-
 
 func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs) error {
 	err := github.LoadRepoByPullRequests(orgMember)

@@ -1,6 +1,6 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS "organizations" (
-  "id" CHAR (50) PRIMARY KEY,
+  "id" VARCHAR (50) PRIMARY KEY NOT NULL,
   "login" VARCHAR (100) NOT NULL,
   "name" TEXT,
   "email" VARCHAR,

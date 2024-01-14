@@ -20,18 +20,18 @@ type AssignedLabal struct {
 }
 
 type Assignee struct {
-	ID             string         `json:"id"`
-	CollaboratorID sql.NullString `json:"collaborator_id"`
-	ActivityID     sql.NullString `json:"activity_id"`
-	ActivityType   sql.NullString `json:"activity_type"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      sql.NullTime   `json:"deleted_at"`
+	ID             string       `json:"id"`
+	CollaboratorID string       `json:"collaborator_id"`
+	ActivityID     string       `json:"activity_id"`
+	ActivityType   string       `json:"activity_type"`
+	CreatedAt      time.Time    `json:"created_at"`
+	UpdatedAt      time.Time    `json:"updated_at"`
+	DeletedAt      sql.NullTime `json:"deleted_at"`
 }
 
 type Branch struct {
 	ID           string         `json:"id"`
-	Name         sql.NullString `json:"name"`
+	Name         string         `json:"name"`
 	Url          sql.NullString `json:"url"`
 	RepositoryID string         `json:"repository_id"`
 	CreatedAt    time.Time      `json:"created_at"`
@@ -58,6 +58,7 @@ type Commit struct {
 	ID                  string         `json:"id"`
 	Message             sql.NullString `json:"message"`
 	BranchID            string         `json:"branch_id"`
+	PrID                sql.NullString `json:"pr_id"`
 	AuthorID            string         `json:"author_id"`
 	Url                 sql.NullString `json:"url"`
 	CommitUrl           sql.NullString `json:"commit_url"`
@@ -122,6 +123,7 @@ type PullRequest struct {
 	Status          sql.NullString `json:"status"`
 	Url             sql.NullString `json:"url"`
 	IsDraft         sql.NullBool   `json:"is_draft"`
+	Branch          sql.NullString `json:"branch"`
 	AuthorID        string         `json:"author_id"`
 	RepositoryID    string         `json:"repository_id"`
 	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
@@ -140,11 +142,11 @@ type Repository struct {
 	DefaultBranch              sql.NullString `json:"default_branch"`
 	Url                        sql.NullString `json:"url"`
 	HomepageUrl                sql.NullString `json:"homepage_url"`
-	OpenIssues                 sql.NullString `json:"open_issues"`
-	ClosedIssues               sql.NullString `json:"closed_issues"`
-	OpenPr                     sql.NullInt32  `json:"open_pr"`
-	ClosedPr                   sql.NullInt32  `json:"closed_pr"`
-	MergedPr                   sql.NullInt32  `json:"merged_pr"`
+	OpenIssues                 sql.NullInt32  `json:"open_issues"`
+	ClosedIssues               sql.NullInt32  `json:"closed_issues"`
+	OpenPrs                    sql.NullInt32  `json:"open_prs"`
+	ClosedPrs                  sql.NullInt32  `json:"closed_prs"`
+	MergedPrs                  sql.NullInt32  `json:"merged_prs"`
 	OrganizationCollaboratorID string         `json:"organization_collaborator_id"`
 	GithubCreatedAt            sql.NullTime   `json:"github_created_at"`
 	GithubUpdatedAt            sql.NullTime   `json:"github_updated_at"`
@@ -154,14 +156,14 @@ type Repository struct {
 }
 
 type Review struct {
-	ID                string         `json:"id"`
-	ReviewerID        string         `json:"reviewer_id"`
-	PrID              string         `json:"pr_id"`
-	Status            string         `json:"status"`
-	GithubCreatedAt   sql.NullString `json:"github_created_at"`
-	GithubUpdatedAt   sql.NullString `json:"github_updated_at"`
-	GithubSubmittedAt sql.NullString `json:"github_submitted_at"`
-	CreatedAt         time.Time      `json:"created_at"`
-	UpdatedAt         time.Time      `json:"updated_at"`
-	DeletedAt         sql.NullTime   `json:"deleted_at"`
+	ID                string       `json:"id"`
+	ReviewerID        string       `json:"reviewer_id"`
+	PrID              string       `json:"pr_id"`
+	Status            string       `json:"status"`
+	GithubCreatedAt   sql.NullTime `json:"github_created_at"`
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubSubmittedAt sql.NullTime `json:"github_submitted_at"`
+	CreatedAt         time.Time    `json:"created_at"`
+	UpdatedAt         time.Time    `json:"updated_at"`
+	DeletedAt         sql.NullTime `json:"deleted_at"`
 }

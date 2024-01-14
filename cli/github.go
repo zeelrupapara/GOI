@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/Improwised/GPAT/cli/github"
 	"github.com/Improwised/GPAT/config"
 	gh "github.com/Improwised/GPAT/github"
@@ -22,6 +24,9 @@ func GetGithubCommandDef(cfg config.AppConfig, logger *zap.Logger) cobra.Command
 				logger.Error(err.Error())
 			}
 			err = githubService.LoadOrganizations()
+			if err != nil {
+				fmt.Println(err)
+			}
 			// // for _, org := range orgs{
 			// // err := githubService.LoadOrganization(org)
 			if err != nil {

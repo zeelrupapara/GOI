@@ -8,6 +8,7 @@ import (
 
 	"github.com/Improwised/GPAT/constants"
 	"github.com/Improwised/GPAT/models"
+	"github.com/Improwised/GPAT/utils"
 	"github.com/shurcooL/githubv4"
 )
 
@@ -54,23 +55,24 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 
 		for _, member := range memberQ.Organization.MembersWithRole.Nodes {
 			fmt.Println(">>>>>>Member:", member.Login)
-			memID, err := github.model.GetMemberByLogin(github.ctx, member.Login)
+			_, err := github.model.GetMemberByLogin(github.ctx, member.Login)
 			if err != nil {
-				return err
-			}
-			if memID == "" {
-				_, err := github.model.InsertMember(github.ctx, models.InsertMemberParams{
-					ID:              member.ID,
-					Login:           member.Login,
-					Name:            sql.NullString{String: member.Name, Valid: true},
-					Email:           sql.NullString{String: member.Email, Valid: true},
-					Url:             sql.NullString{String: member.URL, Valid: true},
-					AvatarUrl:       sql.NullString{String: member.AvatarURL, Valid: true},
-					WebsiteUrl:      sql.NullString{String: member.WebsiteURL, Valid: true},
-					GithubCreatedAt: sql.NullTime{Time: member.GithubCreatedAt, Valid: true},
-					GithubUpdatedAt: sql.NullTime{Time: member.GithubUpdatedAt, Valid: true},
-				})
-				if err != nil {
+				if err == sql.ErrNoRows {
+					_, err := github.model.InsertMember(github.ctx, models.InsertMemberParams{
+						ID:              member.ID,
+						Login:           member.Login,
+						Name:            sql.NullString{String: member.Name, Valid: true},
+						Email:           sql.NullString{String: member.Email, Valid: true},
+						Url:             sql.NullString{String: member.URL, Valid: true},
+						AvatarUrl:       sql.NullString{String: member.AvatarURL, Valid: true},
+						WebsiteUrl:      sql.NullString{String: member.WebsiteURL, Valid: true},
+						GithubCreatedAt: sql.NullTime{Time: member.GithubCreatedAt, Valid: true},
+						GithubUpdatedAt: sql.NullTime{Time: member.GithubUpdatedAt, Valid: true},
+					})
+					if err != nil {
+						return err
+					}
+				} else {
 					return err
 				}
 			}
@@ -81,24 +83,27 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 				CollaboratorID: member.ID,
 			})
 			if err != nil {
-				return err
-			}
-			if orgMemID == "" {
-				_, err = github.model.InsertOrgMember(github.ctx, models.InsertOrgMemberParams{
-					OrganizationID: org.ID,
-					CollaboratorID: member.ID,
-				})
-				if err != nil {
+				if err == sql.ErrNoRows {
+					orgMemID, err = github.model.InsertOrgMember(github.ctx, models.InsertOrgMemberParams{
+						ID:             utils.GenerateUUID(),
+						OrganizationID: org.ID,
+						CollaboratorID: member.ID,
+					})
+					if err != nil {
+						fmt.Println("err", err)
+						return err
+					}
+				} else {
 					return err
 				}
 			}
 
-			orgMember := GithubOrgMemberArgs{
-				ID:     org.ID,
-				Login:  org.Login,
-				Member: member,
-			}
-			err = github.LoadRepo(orgMember)
+			err = github.LoadRepo(GithubOrgMemberArgs{
+				ID:       org.ID,
+				Login:    org.Login,
+				Member:   member,
+				OrgMemID: orgMemID,
+			})
 			if err != nil {
 				return err
 			}

@@ -59,28 +59,29 @@ func (github *GithubService) LoadOrganizations() error {
 
 		for _, org := range organizationQ.Viewer.Organizations.Nodes {
 			fmt.Println("=============Login:", org.Login, "============")
-			organization := models.InsertOrganizationParams{
-				ID:              org.ID,
-				Login:           org.Login,
-				Name:            sql.NullString{String: org.Name, Valid: true},
-				Email:           sql.NullString{String: org.Email, Valid: true},
-				Location:        sql.NullString{String: org.Location, Valid: true},
-				Description:     sql.NullString{String: org.Description, Valid: true},
-				Url:             sql.NullString{String: org.URL, Valid: true},
-				AvatarUrl:       sql.NullString{String: org.AvatarURL, Valid: true},
-				WebsiteUrl:      sql.NullString{String: org.WebsiteURL, Valid: true},
-				GithubUpdatedAt: sql.NullTime{Time: org.GithubUpdatedAt, Valid: true},
-				GithubCreatedAt: sql.NullTime{Time: org.GithubCreatedAt, Valid: true},
-			}
+
 			// Check if org exists or not
-			id, err := github.model.GetOrganizationByLogin(github.ctx, org.Login)
-			if err != nil{
-				return err
-			}
-			if id == "" {
-				_, err = github.model.InsertOrganization(github.ctx, organization)
-				if err != nil {
-					return nil
+			_, err := github.model.GetOrganizationByLogin(github.ctx, org.Login)
+			if err != nil {
+				if err == sql.ErrNoRows {
+					_, err = github.model.InsertOrganization(github.ctx, models.InsertOrganizationParams{
+						ID:              org.ID,
+						Login:           org.Login,
+						Name:            sql.NullString{String: org.Name, Valid: true},
+						Email:           sql.NullString{String: org.Email, Valid: true},
+						Location:        sql.NullString{String: org.Location, Valid: true},
+						Description:     sql.NullString{String: org.Description, Valid: true},
+						Url:             sql.NullString{String: org.URL, Valid: true},
+						AvatarUrl:       sql.NullString{String: org.AvatarURL, Valid: true},
+						WebsiteUrl:      sql.NullString{String: org.WebsiteURL, Valid: true},
+						GithubUpdatedAt: sql.NullTime{Time: org.GithubUpdatedAt, Valid: true},
+						GithubCreatedAt: sql.NullTime{Time: org.GithubCreatedAt, Valid: true},
+					})
+					if err != nil {
+						return nil
+					}
+				} else {
+					return err
 				}
 			}
 

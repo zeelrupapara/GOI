@@ -13,7 +13,7 @@ import (
 const getMemberByLogin = `-- name: GetMemberByLogin :one
 SELECT collaborators.id
 FROM "collaborators"
-WHERE login = $1
+WHERE collaborators.login = $1
 `
 
 func (q *Queries) GetMemberByLogin(ctx context.Context, login string) (string, error) {

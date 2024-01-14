@@ -15,4 +15,4 @@ RETURNING collaborators.id;
 -- name: GetMemberByLogin :one
 SELECT collaborators.id
 FROM "collaborators"
-WHERE login = $1;
+WHERE collaborators.login = $1;
