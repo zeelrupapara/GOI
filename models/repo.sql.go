@@ -35,7 +35,6 @@ INSERT INTO "repositories" (
         "open_prs",
         "closed_prs",
         "merged_prs",
-        "organization_collaborator_id",
         "github_created_at",
         "github_updated_at"
     )
@@ -52,27 +51,25 @@ VALUES (
         $10,
         $11,
         $12,
-        $13,
-        $14
+        $13
     )
 RETURNING repositories.id
 `
 
 type InsertRepoParams struct {
-	ID                         string         `json:"id"`
-	Name                       sql.NullString `json:"name"`
-	IsPrivate                  sql.NullBool   `json:"is_private"`
-	DefaultBranch              sql.NullString `json:"default_branch"`
-	Url                        sql.NullString `json:"url"`
-	HomepageUrl                sql.NullString `json:"homepage_url"`
-	OpenIssues                 sql.NullInt32  `json:"open_issues"`
-	ClosedIssues               sql.NullInt32  `json:"closed_issues"`
-	OpenPrs                    sql.NullInt32  `json:"open_prs"`
-	ClosedPrs                  sql.NullInt32  `json:"closed_prs"`
-	MergedPrs                  sql.NullInt32  `json:"merged_prs"`
-	OrganizationCollaboratorID string         `json:"organization_collaborator_id"`
-	GithubCreatedAt            sql.NullTime   `json:"github_created_at"`
-	GithubUpdatedAt            sql.NullTime   `json:"github_updated_at"`
+	ID              string         `json:"id"`
+	Name            sql.NullString `json:"name"`
+	IsPrivate       sql.NullBool   `json:"is_private"`
+	DefaultBranch   sql.NullString `json:"default_branch"`
+	Url             sql.NullString `json:"url"`
+	HomepageUrl     sql.NullString `json:"homepage_url"`
+	OpenIssues      sql.NullInt32  `json:"open_issues"`
+	ClosedIssues    sql.NullInt32  `json:"closed_issues"`
+	OpenPrs         sql.NullInt32  `json:"open_prs"`
+	ClosedPrs       sql.NullInt32  `json:"closed_prs"`
+	MergedPrs       sql.NullInt32  `json:"merged_prs"`
+	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
 }
 
 func (q *Queries) InsertRepo(ctx context.Context, arg InsertRepoParams) (string, error) {
@@ -88,7 +85,6 @@ func (q *Queries) InsertRepo(ctx context.Context, arg InsertRepoParams) (string,
 		arg.OpenPrs,
 		arg.ClosedPrs,
 		arg.MergedPrs,
-		arg.OrganizationCollaboratorID,
 		arg.GithubCreatedAt,
 		arg.GithubUpdatedAt,
 	)

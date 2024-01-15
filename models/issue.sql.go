@@ -29,7 +29,7 @@ INSERT INTO
         "url",
         "number",
         "author_id",
-        "repository_id",
+        "repository_collaborators_id",
         "github_closed_at",
         "github_created_at",
         "github_updated_at"
@@ -38,16 +38,16 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING issues.id
 `
 
 type InsertIssueParams struct {
-	ID              string         `json:"id"`
-	Title           string         `json:"title"`
-	Status          string         `json:"status"`
-	Url             sql.NullString `json:"url"`
-	Number          sql.NullInt32  `json:"number"`
-	AuthorID        string         `json:"author_id"`
-	RepositoryID    string         `json:"repository_id"`
-	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
-	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
-	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
+	ID                        string         `json:"id"`
+	Title                     string         `json:"title"`
+	Status                    string         `json:"status"`
+	Url                       sql.NullString `json:"url"`
+	Number                    sql.NullInt32  `json:"number"`
+	AuthorID                  string         `json:"author_id"`
+	RepositoryCollaboratorsID string         `json:"repository_collaborators_id"`
+	GithubClosedAt            sql.NullTime   `json:"github_closed_at"`
+	GithubCreatedAt           sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt           sql.NullTime   `json:"github_updated_at"`
 }
 
 func (q *Queries) InsertIssue(ctx context.Context, arg InsertIssueParams) (string, error) {
@@ -58,7 +58,7 @@ func (q *Queries) InsertIssue(ctx context.Context, arg InsertIssueParams) (strin
 		arg.Url,
 		arg.Number,
 		arg.AuthorID,
-		arg.RepositoryID,
+		arg.RepositoryCollaboratorsID,
 		arg.GithubClosedAt,
 		arg.GithubCreatedAt,
 		arg.GithubUpdatedAt,

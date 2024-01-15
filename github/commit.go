@@ -100,20 +100,19 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 			if err != nil {
 				if err == sql.ErrNoRows {
 					_, err = github.model.InsertRepo(github.ctx, models.InsertRepoParams{
-						ID:                         repo.Repository.ID,
-						Name:                       sql.NullString{String: repo.Repository.Name, Valid: true},
-						IsPrivate:                  sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
-						DefaultBranch:              sql.NullString{String: repo.Repository.DefaultBranch.Name},
-						Url:                        sql.NullString{String: repo.Repository.URL},
-						HomepageUrl:                sql.NullString{String: repo.Repository.HomepageUrl},
-						OpenIssues:                 sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
-						ClosedIssues:               sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
-						OpenPrs:                    sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
-						ClosedPrs:                  sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
-						MergedPrs:                  sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
-						OrganizationCollaboratorID: orgMember.OrgMemID,
-						GithubCreatedAt:            sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
-						GithubUpdatedAt:            sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
+						ID:              repo.Repository.ID,
+						Name:            sql.NullString{String: repo.Repository.Name, Valid: true},
+						IsPrivate:       sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
+						DefaultBranch:   sql.NullString{String: repo.Repository.DefaultBranch.Name},
+						Url:             sql.NullString{String: repo.Repository.URL},
+						HomepageUrl:     sql.NullString{String: repo.Repository.HomepageUrl},
+						OpenIssues:      sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
+						ClosedIssues:    sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
+						OpenPrs:         sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
+						ClosedPrs:       sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
+						MergedPrs:       sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
+						GithubCreatedAt: sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
+						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
 						return err

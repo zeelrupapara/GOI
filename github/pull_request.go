@@ -155,31 +155,51 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		}
 
 		for _, repo := range pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository {
-
+			var repoMemberID string
 			// Check repo exist or not?
 			repoID, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
 			if err != nil {
 				if err == sql.ErrNoRows {
 					repoID, err = github.model.InsertRepo(github.ctx, models.InsertRepoParams{
-						ID:                         repo.Repository.ID,
-						Name:                       sql.NullString{String: repo.Repository.Name, Valid: true},
-						IsPrivate:                  sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
-						DefaultBranch:              sql.NullString{String: repo.Repository.DefaultBranch.Name},
-						Url:                        sql.NullString{String: repo.Repository.URL},
-						HomepageUrl:                sql.NullString{String: repo.Repository.HomepageUrl},
-						OpenIssues:                 sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
-						ClosedIssues:               sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
-						OpenPrs:                    sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
-						ClosedPrs:                  sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
-						MergedPrs:                  sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
-						OrganizationCollaboratorID: orgMember.OrgMemID,
-						GithubCreatedAt:            sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
-						GithubUpdatedAt:            sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
+						ID:              repo.Repository.ID,
+						Name:            sql.NullString{String: repo.Repository.Name, Valid: true},
+						IsPrivate:       sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
+						DefaultBranch:   sql.NullString{String: repo.Repository.DefaultBranch.Name},
+						Url:             sql.NullString{String: repo.Repository.URL},
+						HomepageUrl:     sql.NullString{String: repo.Repository.HomepageUrl},
+						OpenIssues:      sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
+						ClosedIssues:    sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
+						OpenPrs:         sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
+						ClosedPrs:       sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
+						MergedPrs:       sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
+						GithubCreatedAt: sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
+						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
+						fmt.Print(err)
 						return err
 					}
 				} else {
+					return err
+				}
+			}
+			repoMemberID, err = github.model.GetRepoMemberByOrgRepoID(github.ctx, models.GetRepoMemberByOrgRepoIDParams{
+				RepoID:                     repoID,
+				OrganizationCollaboratorID: orgMember.OrgMemID,
+			})
+			if err != nil {
+				if err == sql.ErrNoRows {
+					repoMemberID, err = github.model.InsertOrgRepoMember(github.ctx, models.InsertOrgRepoMemberParams{
+						ID:                         utils.GenerateUUID(),
+						RepoID:                     repoID,
+						OrganizationCollaboratorID: orgMember.OrgMemID,
+					})
+					if err != nil {
+						fmt.Println(err)
+						return err
+					}
+				} else {
+					fmt.Println(err)
 					return err
 				}
 			}
@@ -200,25 +220,28 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 									return err
 								}
 							}
+							fmt.Println("=======+>", repoMemberID)
 							prID, err = github.model.InsertPR(github.ctx, models.InsertPRParams{
-								ID:              prContribution.PullRequest.ID,
-								Title:           sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
-								Status:          sql.NullString{String: prContribution.PullRequest.State, Valid: true},
-								Url:             sql.NullString{String: prContribution.PullRequest.URL, Valid: true},
-								IsDraft:         sql.NullBool{Bool: prContribution.PullRequest.IsDraft, Valid: true},
-								Number:          sql.NullInt32{Int32: int32(prContribution.PullRequest.Number), Valid: true},
-								Branch:          sql.NullString{String: prContribution.PullRequest.Branch, Valid: true},
-								AuthorID:        prAuthorID,
-								RepositoryID:    repoID,
-								GithubClosedAt:  sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
-								GithubMergedAt:  sql.NullTime{Time: prContribution.PullRequest.MergedAt, Valid: true},
-								GithubCreatedAt: sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
-								GithubUpdatedAt: sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
+								ID:                        prContribution.PullRequest.ID,
+								Title:                     sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
+								Status:                    sql.NullString{String: prContribution.PullRequest.State, Valid: true},
+								Url:                       sql.NullString{String: prContribution.PullRequest.URL, Valid: true},
+								IsDraft:                   sql.NullBool{Bool: prContribution.PullRequest.IsDraft, Valid: true},
+								Number:                    sql.NullInt32{Int32: int32(prContribution.PullRequest.Number), Valid: true},
+								Branch:                    sql.NullString{String: prContribution.PullRequest.Branch, Valid: true},
+								AuthorID:                  prAuthorID,
+								RepositoryCollaboratorsID: repoMemberID,
+								GithubClosedAt:            sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
+								GithubMergedAt:            sql.NullTime{Time: prContribution.PullRequest.MergedAt, Valid: true},
+								GithubCreatedAt:           sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
+								GithubUpdatedAt:           sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
 							})
 							if err != nil {
+								fmt.Print(err)
 								return err
 							}
 						} else {
+							fmt.Print(err)
 							return err
 						}
 					}
@@ -231,9 +254,13 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									reviwerID, err = github.LoadMember(review.Author.Login)
 									if err != nil {
+										fmt.Print(err)
+
 										return err
 									}
 								} else {
+									fmt.Print(err)
+
 									return err
 								}
 							}
@@ -250,6 +277,8 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
 									})
 								} else {
+									fmt.Print(err)
+
 									return err
 								}
 							}
@@ -268,9 +297,13 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
+										fmt.Print(err)
+
 										return err
 									}
 								} else {
+									fmt.Print(err)
+
 									return err
 								}
 							}
@@ -289,9 +322,13 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ActivityType: ActivityType,
 									})
 									if err != nil {
+										fmt.Print(err)
+
 										return err
 									}
 								} else {
+									fmt.Print(err)
+
 									return err
 								}
 							}
@@ -391,6 +428,8 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
 									})
 								} else {
+									fmt.Print(err)
+
 									return err
 								}
 							}

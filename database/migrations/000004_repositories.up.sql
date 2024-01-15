@@ -11,7 +11,6 @@ CREATE TABLE IF NOT EXISTS "repositories" (
   "open_prs" INTEGER,
   "closed_prs" INTEGER,
   "merged_prs" INTEGER,
-  "organization_collaborator_id" VARCHAR (50) NOT NULL,
   "github_created_at" TIMESTAMP,
   "github_updated_at" TIMESTAMP,
   "created_at" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

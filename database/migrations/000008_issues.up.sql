@@ -7,7 +7,7 @@ CREATE TABLE
         "url" TEXT,
         "number" INTEGER,
         "author_id" VARCHAR (50) NOT NULL,
-        "repository_id" VARCHAR (50) NOT NULL,
+        "repository_collaborators_id" VARCHAR (50) NOT NULL,
         "github_closed_at" TIMESTAMP,
         "github_created_at" TIMESTAMP,
         "github_updated_at" TIMESTAMP,

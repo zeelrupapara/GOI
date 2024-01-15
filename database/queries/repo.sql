@@ -11,7 +11,6 @@ INSERT INTO "repositories" (
         "open_prs",
         "closed_prs",
         "merged_prs",
-        "organization_collaborator_id",
         "github_created_at",
         "github_updated_at"
     )
@@ -28,8 +27,7 @@ VALUES (
         $10,
         $11,
         $12,
-        $13,
-        $14
+        $13
     )
 RETURNING repositories.id;
 -- name: GetRepoByID :one

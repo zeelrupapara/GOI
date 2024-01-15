@@ -9,7 +9,7 @@ CREATE TABLE
         "branch" VARCHAR,
         "number" INTEGER,
         "author_id" VARCHAR (50) NOT NULL,
-        "repository_id" VARCHAR (50) NOT NULL,
+        "repository_collaborators_id" VARCHAR (50) NOT NULL,
         "github_closed_at" TIMESTAMP,
         "github_merged_at" TIMESTAMP,
         "github_created_at" TIMESTAMP,

@@ -33,7 +33,7 @@ INSERT INTO
         "is_draft",
         "branch",
         "author_id",
-        "repository_id",
+        "repository_collaborators_id",
         "github_closed_at",
         "github_merged_at",
         "github_created_at",
@@ -57,19 +57,19 @@ VALUES (
 `
 
 type InsertPRParams struct {
-	ID              string         `json:"id"`
-	Title           sql.NullString `json:"title"`
-	Status          sql.NullString `json:"status"`
-	Url             sql.NullString `json:"url"`
-	Number          sql.NullInt32  `json:"number"`
-	IsDraft         sql.NullBool   `json:"is_draft"`
-	Branch          sql.NullString `json:"branch"`
-	AuthorID        string         `json:"author_id"`
-	RepositoryID    string         `json:"repository_id"`
-	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
-	GithubMergedAt  sql.NullTime   `json:"github_merged_at"`
-	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
-	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
+	ID                        string         `json:"id"`
+	Title                     sql.NullString `json:"title"`
+	Status                    sql.NullString `json:"status"`
+	Url                       sql.NullString `json:"url"`
+	Number                    sql.NullInt32  `json:"number"`
+	IsDraft                   sql.NullBool   `json:"is_draft"`
+	Branch                    sql.NullString `json:"branch"`
+	AuthorID                  string         `json:"author_id"`
+	RepositoryCollaboratorsID string         `json:"repository_collaborators_id"`
+	GithubClosedAt            sql.NullTime   `json:"github_closed_at"`
+	GithubMergedAt            sql.NullTime   `json:"github_merged_at"`
+	GithubCreatedAt           sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt           sql.NullTime   `json:"github_updated_at"`
 }
 
 func (q *Queries) InsertPR(ctx context.Context, arg InsertPRParams) (string, error) {
@@ -82,7 +82,7 @@ func (q *Queries) InsertPR(ctx context.Context, arg InsertPRParams) (string, err
 		arg.IsDraft,
 		arg.Branch,
 		arg.AuthorID,
-		arg.RepositoryID,
+		arg.RepositoryCollaboratorsID,
 		arg.GithubClosedAt,
 		arg.GithubMergedAt,
 		arg.GithubCreatedAt,

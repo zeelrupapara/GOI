@@ -7,7 +7,7 @@ INSERT INTO
         "url",
         "number",
         "author_id",
-        "repository_id",
+        "repository_collaborators_id",
         "github_closed_at",
         "github_created_at",
         "github_updated_at"

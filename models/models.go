@@ -71,19 +71,19 @@ type Commit struct {
 }
 
 type Issue struct {
-	ID              string         `json:"id"`
-	Title           string         `json:"title"`
-	Status          string         `json:"status"`
-	Url             sql.NullString `json:"url"`
-	Number          sql.NullInt32  `json:"number"`
-	AuthorID        string         `json:"author_id"`
-	RepositoryID    string         `json:"repository_id"`
-	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
-	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
-	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
-	CreatedAt       time.Time      `json:"created_at"`
-	UpdatedAt       time.Time      `json:"updated_at"`
-	DeletedAt       sql.NullTime   `json:"deleted_at"`
+	ID                        string         `json:"id"`
+	Title                     string         `json:"title"`
+	Status                    string         `json:"status"`
+	Url                       sql.NullString `json:"url"`
+	Number                    sql.NullInt32  `json:"number"`
+	AuthorID                  string         `json:"author_id"`
+	RepositoryCollaboratorsID string         `json:"repository_collaborators_id"`
+	GithubClosedAt            sql.NullTime   `json:"github_closed_at"`
+	GithubCreatedAt           sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt           sql.NullTime   `json:"github_updated_at"`
+	CreatedAt                 time.Time      `json:"created_at"`
+	UpdatedAt                 time.Time      `json:"updated_at"`
+	DeletedAt                 sql.NullTime   `json:"deleted_at"`
 }
 
 type Labal struct {
@@ -121,17 +121,36 @@ type OrganizationCollaborator struct {
 }
 
 type PullRequest struct {
+	ID                        string         `json:"id"`
+	Title                     sql.NullString `json:"title"`
+	Status                    sql.NullString `json:"status"`
+	Url                       sql.NullString `json:"url"`
+	IsDraft                   sql.NullBool   `json:"is_draft"`
+	Branch                    sql.NullString `json:"branch"`
+	Number                    sql.NullInt32  `json:"number"`
+	AuthorID                  string         `json:"author_id"`
+	RepositoryCollaboratorsID string         `json:"repository_collaborators_id"`
+	GithubClosedAt            sql.NullTime   `json:"github_closed_at"`
+	GithubMergedAt            sql.NullTime   `json:"github_merged_at"`
+	GithubCreatedAt           sql.NullTime   `json:"github_created_at"`
+	GithubUpdatedAt           sql.NullTime   `json:"github_updated_at"`
+	CreatedAt                 time.Time      `json:"created_at"`
+	UpdatedAt                 time.Time      `json:"updated_at"`
+	DeletedAt                 sql.NullTime   `json:"deleted_at"`
+}
+
+type Repository struct {
 	ID              string         `json:"id"`
-	Title           sql.NullString `json:"title"`
-	Status          sql.NullString `json:"status"`
+	Name            sql.NullString `json:"name"`
+	IsPrivate       sql.NullBool   `json:"is_private"`
+	DefaultBranch   sql.NullString `json:"default_branch"`
 	Url             sql.NullString `json:"url"`
-	IsDraft         sql.NullBool   `json:"is_draft"`
-	Branch          sql.NullString `json:"branch"`
-	Number          sql.NullInt32  `json:"number"`
-	AuthorID        string         `json:"author_id"`
-	RepositoryID    string         `json:"repository_id"`
-	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
-	GithubMergedAt  sql.NullTime   `json:"github_merged_at"`
+	HomepageUrl     sql.NullString `json:"homepage_url"`
+	OpenIssues      sql.NullInt32  `json:"open_issues"`
+	ClosedIssues    sql.NullInt32  `json:"closed_issues"`
+	OpenPrs         sql.NullInt32  `json:"open_prs"`
+	ClosedPrs       sql.NullInt32  `json:"closed_prs"`
+	MergedPrs       sql.NullInt32  `json:"merged_prs"`
 	GithubCreatedAt sql.NullTime   `json:"github_created_at"`
 	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
 	CreatedAt       time.Time      `json:"created_at"`
@@ -139,24 +158,10 @@ type PullRequest struct {
 	DeletedAt       sql.NullTime   `json:"deleted_at"`
 }
 
-type Repository struct {
-	ID                         string         `json:"id"`
-	Name                       sql.NullString `json:"name"`
-	IsPrivate                  sql.NullBool   `json:"is_private"`
-	DefaultBranch              sql.NullString `json:"default_branch"`
-	Url                        sql.NullString `json:"url"`
-	HomepageUrl                sql.NullString `json:"homepage_url"`
-	OpenIssues                 sql.NullInt32  `json:"open_issues"`
-	ClosedIssues               sql.NullInt32  `json:"closed_issues"`
-	OpenPrs                    sql.NullInt32  `json:"open_prs"`
-	ClosedPrs                  sql.NullInt32  `json:"closed_prs"`
-	MergedPrs                  sql.NullInt32  `json:"merged_prs"`
-	OrganizationCollaboratorID string         `json:"organization_collaborator_id"`
-	GithubCreatedAt            sql.NullTime   `json:"github_created_at"`
-	GithubUpdatedAt            sql.NullTime   `json:"github_updated_at"`
-	CreatedAt                  time.Time      `json:"created_at"`
-	UpdatedAt                  time.Time      `json:"updated_at"`
-	DeletedAt                  sql.NullTime   `json:"deleted_at"`
+type RepositoryCollaborator struct {
+	ID                         string `json:"id"`
+	RepoID                     string `json:"repo_id"`
+	OrganizationCollaboratorID string `json:"organization_collaborator_id"`
 }
 
 type Review struct {
