@@ -5,13 +5,14 @@ INSERT INTO
         "title",
         "status",
         "url",
+        "number",
         "author_id",
         "repository_id",
         "github_closed_at",
         "github_created_at",
         "github_updated_at"
     )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING issues.id;
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING issues.id;
 
 -- name: GetIssueByID :one
 SELECT issues.id FROM "issues" WHERE issues.id = $1;

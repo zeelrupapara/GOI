@@ -1,9 +1,11 @@
 -- name: InsertPR :one
-INSERT INTO "pull_requests" (
+INSERT INTO
+    "pull_requests" (
         "id",
         "title",
         "status",
         "url",
+        "number",
         "is_draft",
         "branch",
         "author_id",
@@ -25,9 +27,9 @@ VALUES (
         $9,
         $10,
         $11,
-        $12
-    )
-RETURNING pull_requests.id;
+        $12,
+        $13
+    ) RETURNING pull_requests.id;
 -- name: GetPRByID :one
 SELECT pull_requests.id
 FROM "pull_requests"

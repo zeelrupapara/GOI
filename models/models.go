@@ -10,23 +10,25 @@ import (
 )
 
 type AssignedLabal struct {
-	ID           string       `json:"id"`
-	LabalID      string       `json:"labal_id"`
-	ActivityID   string       `json:"activity_id"`
-	ActivityType string       `json:"activity_type"`
-	CreatedAt    time.Time    `json:"created_at"`
-	UpdatedAt    time.Time    `json:"updated_at"`
-	DeletedAt    sql.NullTime `json:"deleted_at"`
+	ID           string         `json:"id"`
+	LabalID      string         `json:"labal_id"`
+	PrID         sql.NullString `json:"pr_id"`
+	IssueID      sql.NullString `json:"issue_id"`
+	ActivityType string         `json:"activity_type"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	DeletedAt    sql.NullTime   `json:"deleted_at"`
 }
 
 type Assignee struct {
-	ID             string       `json:"id"`
-	CollaboratorID string       `json:"collaborator_id"`
-	ActivityID     string       `json:"activity_id"`
-	ActivityType   string       `json:"activity_type"`
-	CreatedAt      time.Time    `json:"created_at"`
-	UpdatedAt      time.Time    `json:"updated_at"`
-	DeletedAt      sql.NullTime `json:"deleted_at"`
+	ID             string         `json:"id"`
+	CollaboratorID string         `json:"collaborator_id"`
+	PrID           sql.NullString `json:"pr_id"`
+	IssueID        sql.NullString `json:"issue_id"`
+	ActivityType   string         `json:"activity_type"`
+	CreatedAt      time.Time      `json:"created_at"`
+	UpdatedAt      time.Time      `json:"updated_at"`
+	DeletedAt      sql.NullTime   `json:"deleted_at"`
 }
 
 type Branch struct {
@@ -73,6 +75,7 @@ type Issue struct {
 	Title           string         `json:"title"`
 	Status          string         `json:"status"`
 	Url             sql.NullString `json:"url"`
+	Number          sql.NullInt32  `json:"number"`
 	AuthorID        string         `json:"author_id"`
 	RepositoryID    string         `json:"repository_id"`
 	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
@@ -124,6 +127,7 @@ type PullRequest struct {
 	Url             sql.NullString `json:"url"`
 	IsDraft         sql.NullBool   `json:"is_draft"`
 	Branch          sql.NullString `json:"branch"`
+	Number          sql.NullInt32  `json:"number"`
 	AuthorID        string         `json:"author_id"`
 	RepositoryID    string         `json:"repository_id"`
 	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`

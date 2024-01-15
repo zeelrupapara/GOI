@@ -23,11 +23,13 @@ func (q *Queries) GetPRByID(ctx context.Context, id string) (string, error) {
 }
 
 const insertPR = `-- name: InsertPR :one
-INSERT INTO "pull_requests" (
+INSERT INTO
+    "pull_requests" (
         "id",
         "title",
         "status",
         "url",
+        "number",
         "is_draft",
         "branch",
         "author_id",
@@ -49,9 +51,9 @@ VALUES (
         $9,
         $10,
         $11,
-        $12
-    )
-RETURNING pull_requests.id
+        $12,
+        $13
+    ) RETURNING pull_requests.id
 `
 
 type InsertPRParams struct {
@@ -59,6 +61,7 @@ type InsertPRParams struct {
 	Title           sql.NullString `json:"title"`
 	Status          sql.NullString `json:"status"`
 	Url             sql.NullString `json:"url"`
+	Number          sql.NullInt32  `json:"number"`
 	IsDraft         sql.NullBool   `json:"is_draft"`
 	Branch          sql.NullString `json:"branch"`
 	AuthorID        string         `json:"author_id"`
@@ -75,6 +78,7 @@ func (q *Queries) InsertPR(ctx context.Context, arg InsertPRParams) (string, err
 		arg.Title,
 		arg.Status,
 		arg.Url,
+		arg.Number,
 		arg.IsDraft,
 		arg.Branch,
 		arg.AuthorID,

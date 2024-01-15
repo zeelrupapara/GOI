@@ -119,3 +119,36 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 	}
 	return nil
 }
+
+func (github *GithubService) LoadMember(username string) (string, error) {
+	var memID string
+	var memberQ struct {
+		User GithubMemberQ `graphql:"user(login: $username)"`
+	}
+
+	variables := map[string]interface{}{
+		"username": githubv4.String(username),
+	}
+
+	err := github.client.Query(context.Background(), &memberQ, variables)
+	if err != nil {
+		return memID, err
+	}
+
+	memID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
+		ID:              memberQ.User.ID,
+		Login:           memberQ.User.Login,
+		Name:            sql.NullString{String: memberQ.User.Name, Valid: true},
+		Email:           sql.NullString{String: memberQ.User.Email, Valid: true},
+		Url:             sql.NullString{String: memberQ.User.URL, Valid: true},
+		AvatarUrl:       sql.NullString{String: memberQ.User.AvatarURL, Valid: true},
+		WebsiteUrl:      sql.NullString{String: memberQ.User.WebsiteURL, Valid: true},
+		GithubCreatedAt: sql.NullTime{Time: memberQ.User.GithubCreatedAt, Valid: true},
+		GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
+	})
+	if err != nil {
+		return memID, err
+	}
+
+	return memID, nil
+}

@@ -27,13 +27,14 @@ INSERT INTO
         "title",
         "status",
         "url",
+        "number",
         "author_id",
         "repository_id",
         "github_closed_at",
         "github_created_at",
         "github_updated_at"
     )
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING issues.id
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING issues.id
 `
 
 type InsertIssueParams struct {
@@ -41,6 +42,7 @@ type InsertIssueParams struct {
 	Title           string         `json:"title"`
 	Status          string         `json:"status"`
 	Url             sql.NullString `json:"url"`
+	Number          sql.NullInt32  `json:"number"`
 	AuthorID        string         `json:"author_id"`
 	RepositoryID    string         `json:"repository_id"`
 	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
@@ -54,6 +56,7 @@ func (q *Queries) InsertIssue(ctx context.Context, arg InsertIssueParams) (strin
 		arg.Title,
 		arg.Status,
 		arg.Url,
+		arg.Number,
 		arg.AuthorID,
 		arg.RepositoryID,
 		arg.GithubClosedAt,

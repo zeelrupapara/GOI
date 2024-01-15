@@ -15,7 +15,6 @@ import (
 type GithubPRContribution struct {
 	PullRequest GithubPullRequestQ
 }
-
 type GithubPullRequestQ struct {
 	ID      string
 	Title   string
@@ -53,16 +52,18 @@ type GithubLabelQ struct {
 	Name string
 }
 
+type GithubCommits struct {
+	Commit GithubCommitQ
+}
+
 type GithubCommitQ struct {
-	Commit struct {
-		ID            string
-		Message       string
-		CommittedDate time.Time
-		URL           string
-		CommitUrl     string
-		Committer     struct {
-			Name string
-		}
+	ID            string
+	Message       string
+	CommittedDate time.Time
+	URL           string
+	CommitUrl     string
+	Committer     struct {
+		Name string
 	}
 }
 
@@ -88,7 +89,7 @@ type GithubLabelsQ struct {
 }
 
 type GithubCommitsQ struct {
-	Nodes    []GithubCommitQ
+	Nodes    []GithubCommits
 	PageInfo PageInfo
 }
 
@@ -180,69 +181,37 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 					return err
 				}
 			}
-
-			for _, prContribution := range repo.Contributions.Nodes {
-				fmt.Println(prContribution.PullRequest.Title)
-				_, err := github.model.GetPRByID(github.ctx, prContribution.PullRequest.ID)
-				if err != nil {
-					if err == sql.ErrNoRows {
-						prAuthorID, err := github.model.GetMemberByLogin(github.ctx, prContribution.PullRequest.Author.Login)
-						if err != nil {
-							return err
-						}
-						_, err = github.model.InsertPR(github.ctx, models.InsertPRParams{
-							ID:              prContribution.PullRequest.ID,
-							Title:           sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
-							Status:          sql.NullString{String: prContribution.PullRequest.State, Valid: true},
-							Url:             sql.NullString{String: prContribution.PullRequest.URL, Valid: true},
-							IsDraft:         sql.NullBool{Bool: prContribution.PullRequest.IsDraft, Valid: true},
-							Branch:          sql.NullString{String: prContribution.PullRequest.Branch, Valid: true},
-							AuthorID:        prAuthorID,
-							RepositoryID:    repoID,
-							GithubClosedAt:  sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
-							GithubMergedAt:  sql.NullTime{Time: prContribution.PullRequest.MergedAt, Valid: true},
-							GithubCreatedAt: sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
-							GithubUpdatedAt: sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
-						})
-						if err != nil {
-							return err
-						}
-					} else {
-						return err
-					}
-				}
-
-				for _, review := range prContribution.PullRequest.Reviews.Nodes {
-					fmt.Println(review.Author.Login)
-					reviwerID, err := github.model.GetMemberByLogin(github.ctx, review.Author.Login)
-					if err != nil {
-						return err
-					}
-					_, err = github.model.GetReviewByID(github.ctx, review.ID)
+			if len(repo.Contributions.Nodes) > 0 {
+				for _, prContribution := range repo.Contributions.Nodes {
+					fmt.Println(prContribution.PullRequest.Title)
+					prID, err := github.model.GetPRByID(github.ctx, prContribution.PullRequest.ID)
 					if err != nil {
 						if err == sql.ErrNoRows {
-							github.model.InsertReview(github.ctx, models.InsertReviewParams{
-								ID:                review.ID,
-								ReviewerID:        reviwerID,
-								PrID:              prContribution.PullRequest.ID,
-								Status:            review.State,
-								GithubCreatedAt:   sql.NullTime{Time: review.CreatedAt, Valid: true},
-								GithubUpdatedAt:   sql.NullTime{Time: review.UpdatedAt, Valid: true},
-								GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
-							})
-						} else {
-							return err
-						}
-					}
-				}
-				for _, labal := range prContribution.PullRequest.Labels.Nodes {
-					fmt.Println(labal.Name)
-					labalID, err := github.model.GetLabalByID(github.ctx, labal.ID)
-					if err != nil {
-						if err == sql.ErrNoRows {
-							labalID, err = github.model.InsertLabal(github.ctx, models.InsertLabalParams{
-								ID:   labal.ID,
-								Name: sql.NullString{String: labal.Name, Valid: true},
+							prAuthorID, err := github.model.GetMemberByLogin(github.ctx, prContribution.PullRequest.Author.Login)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									prAuthorID, err = github.LoadMember(prContribution.PullRequest.Author.Login)
+									if err != nil {
+										return err
+									}
+								} else {
+									return err
+								}
+							}
+							prID, err = github.model.InsertPR(github.ctx, models.InsertPRParams{
+								ID:              prContribution.PullRequest.ID,
+								Title:           sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
+								Status:          sql.NullString{String: prContribution.PullRequest.State, Valid: true},
+								Url:             sql.NullString{String: prContribution.PullRequest.URL, Valid: true},
+								IsDraft:         sql.NullBool{Bool: prContribution.PullRequest.IsDraft, Valid: true},
+								Number:          sql.NullInt32{Int32: int32(prContribution.PullRequest.Number), Valid: true},
+								Branch:          sql.NullString{String: prContribution.PullRequest.Branch, Valid: true},
+								AuthorID:        prAuthorID,
+								RepositoryID:    repoID,
+								GithubClosedAt:  sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
+								GithubMergedAt:  sql.NullTime{Time: prContribution.PullRequest.MergedAt, Valid: true},
+								GithubCreatedAt: sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
+								GithubUpdatedAt: sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
 							})
 							if err != nil {
 								return err
@@ -251,132 +220,217 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							return err
 						}
 					}
-
-					// assign labal
-					_, err = github.model.GetAssignedLabal(github.ctx, models.GetAssignedLabalParams{
-						LabalID:    labalID,
-						ActivityID: prContribution.PullRequest.ID,
-					})
-					if err != nil {
-						if err == sql.ErrNoRows {
-							_, err = github.model.InsertAssignedLabal(github.ctx, models.InsertAssignedLabalParams{
-								ID:           utils.GenerateUUID(),
-								LabalID:      labalID,
-								ActivityID:   prContribution.PullRequest.ID,
-								ActivityType: ActivityType,
-							})
+					// review
+					if len(prContribution.PullRequest.Reviews.Nodes) > 0 {
+						for _, review := range prContribution.PullRequest.Reviews.Nodes {
+							fmt.Println(review.Author.Login)
+							reviwerID, err := github.model.GetMemberByLogin(github.ctx, review.Author.Login)
 							if err != nil {
-								return err
+								if err == sql.ErrNoRows {
+									reviwerID, err = github.LoadMember(review.Author.Login)
+									if err != nil {
+										return err
+									}
+								} else {
+									return err
+								}
 							}
-						} else {
-							return err
+							_, err = github.model.GetReviewByID(github.ctx, review.ID)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									github.model.InsertReview(github.ctx, models.InsertReviewParams{
+										ID:                review.ID,
+										ReviewerID:        reviwerID,
+										PrID:              prContribution.PullRequest.ID,
+										Status:            review.State,
+										GithubCreatedAt:   sql.NullTime{Time: review.CreatedAt, Valid: true},
+										GithubUpdatedAt:   sql.NullTime{Time: review.UpdatedAt, Valid: true},
+										GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
+									})
+								} else {
+									return err
+								}
+							}
 						}
 					}
-				}
-				for _, assignee := range prContribution.PullRequest.Assignees.Nodes {
-					fmt.Println(assignee.Login)
-					memID, err := github.model.GetMemberByLogin(github.ctx, assignee.Login)
-					if err != nil {
-						return err
+
+					// labal
+					if len(prContribution.PullRequest.Labels.Nodes) > 0 {
+						for _, labal := range prContribution.PullRequest.Labels.Nodes {
+							fmt.Println(labal.Name)
+							labalID, err := github.model.GetLabalByID(github.ctx, labal.ID)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									labalID, err = github.model.InsertLabal(github.ctx, models.InsertLabalParams{
+										ID:   labal.ID,
+										Name: sql.NullString{String: labal.Name, Valid: true},
+									})
+									if err != nil {
+										return err
+									}
+								} else {
+									return err
+								}
+							}
+
+							// assign labal
+							_, err = github.model.GetAssignedLabalByPR(github.ctx, models.GetAssignedLabalByPRParams{
+								LabalID: labalID,
+								PrID:    sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
+							})
+							if err != nil {
+								if err == sql.ErrNoRows {
+									_, err = github.model.InsertAssignedLabal(github.ctx, models.InsertAssignedLabalParams{
+										ID:           utils.GenerateUUID(),
+										LabalID:      labalID,
+										PrID:         sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
+										ActivityType: ActivityType,
+									})
+									if err != nil {
+										return err
+									}
+								} else {
+									return err
+								}
+							}
+
+						}
 					}
-					_, err = github.model.GetAssigneeByID(github.ctx, models.GetAssigneeByIDParams{
-						CollaboratorID: memID,
-						ActivityID:     prContribution.PullRequest.ID,
-					})
-					if err != nil {
-						if err == sql.ErrNoRows {
-							_, err = github.model.InsertAssignee(github.ctx, models.InsertAssigneeParams{
-								ID:             utils.GenerateUUID(),
+
+					// assignee
+					if len(prContribution.PullRequest.Assignees.Nodes) > 0 {
+						for _, assignee := range prContribution.PullRequest.Assignees.Nodes {
+							fmt.Println(assignee.Login)
+							memID, err := github.model.GetMemberByLogin(github.ctx, assignee.Login)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									memID, err = github.LoadMember(assignee.Login)
+									if err != nil {
+										fmt.Println("member", err)
+										return err
+									}
+								} else {
+									fmt.Println("jr", err)
+									return err
+								}
+							}
+							_, err = github.model.GetAssigneeByPR(github.ctx, models.GetAssigneeByPRParams{
 								CollaboratorID: memID,
-								ActivityID:     prContribution.PullRequest.ID,
-								ActivityType:   ActivityType,
+								PrID:           sql.NullString{String: prContribution.PullRequest.ID},
 							})
 							if err != nil {
-								return err
+								if err == sql.ErrNoRows {
+									_, err = github.model.InsertAssignee(github.ctx, models.InsertAssigneeParams{
+										ID:             utils.GenerateUUID(),
+										CollaboratorID: memID,
+										PrID:           sql.NullString{String: prID, Valid: true},
+										ActivityType:   ActivityType,
+									})
+									if err != nil {
+										fmt.Println("fdhk", err)
+										return err
+									}
+								} else {
+									fmt.Println("assignee", err)
+									return err
+								}
 							}
-						} else {
-							return err
 						}
 					}
-				}
-				branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
-					Name:         prContribution.PullRequest.Branch,
-					RepositoryID: repo.Repository.ID,
-				})
-				if err != nil {
-					if err == sql.ErrNoRows {
-						branchID, err = github.model.InsertBranch(github.ctx, models.InsertBranchParams{
-							ID:           utils.GenerateUUID(),
+
+					// commits
+					if len(prContribution.PullRequest.Commits.Nodes) > 0 {
+						branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
 							Name:         prContribution.PullRequest.Branch,
 							RepositoryID: repo.Repository.ID,
 						})
 						if err != nil {
-							return err
+							if err == sql.ErrNoRows {
+								branchID, err = github.model.InsertBranch(github.ctx, models.InsertBranchParams{
+									ID:           utils.GenerateUUID(),
+									Name:         prContribution.PullRequest.Branch,
+									RepositoryID: repo.Repository.ID,
+								})
+								if err != nil {
+									fmt.Println("assignee", err)
+									return err
+								}
+							} else {
+								fmt.Println("assignee", err)
+								return err
+							}
 						}
-					} else {
-						return err
-					}
-				}
-				for _, commit := range prContribution.PullRequest.Commits.Nodes {
-					fmt.Println(commit.Commit.Committer.Name)
-					committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Committer.Name)
-					if err != nil {
-						return err
-					}
-					_, err = github.model.GetCommitByID(github.ctx, commit.Commit.ID)
-					if err != nil {
-						if err == sql.ErrNoRows {
-							github.model.InsertCommit(github.ctx, models.InsertCommitParams{
-								ID:                  commit.Commit.ID,
-								Message:             sql.NullString{String: commit.Commit.Message, Valid: true},
-								BranchID:            branchID,
-								AuthorID:            committerID,
-								PrID:                sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
-								Url:                 sql.NullString{String: commit.Commit.URL},
-								CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl},
-								GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
-							})
-						} else {
-							return err
+						for _, commit := range prContribution.PullRequest.Commits.Nodes {
+							fmt.Println(commit.Commit.Committer.Name)
+							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Committer.Name)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									committerID, err = github.LoadMember(commit.Commit.Committer.Name)
+									if err != nil {
+										fmt.Println("assignee", err)
+										return err
+									}
+								} else {
+									fmt.Println("assignee", err)
+									return err
+								}
+							}
+							_, err = github.model.GetCommitByID(github.ctx, commit.Commit.ID)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									github.model.InsertCommit(github.ctx, models.InsertCommitParams{
+										ID:                  commit.Commit.ID,
+										Message:             sql.NullString{String: commit.Commit.Message, Valid: true},
+										BranchID:            branchID,
+										AuthorID:            committerID,
+										PrID:                sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
+										Url:                 sql.NullString{String: commit.Commit.URL},
+										CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl},
+										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
+									})
+								} else {
+									return err
+								}
+							}
 						}
 					}
-				}
 
-				// reviews page break
-				if !prContribution.PullRequest.Reviews.PageInfo.HasNextPage {
-					if !utils.Contains("Review", noPages) {
-						noPages = append(noPages, "Review")
-						contributionsLimit = githubv4.Int(0)
+					// reviews page break
+					if !prContribution.PullRequest.Reviews.PageInfo.HasNextPage {
+						if !utils.Contains("Review", noPages) {
+							noPages = append(noPages, "Review")
+							reviewsLimit = githubv4.Int(0)
+						}
 					}
-				}
-				reviewsCursor = &prContribution.PullRequest.Reviews.PageInfo.EndCursor
+					reviewsCursor = &prContribution.PullRequest.Reviews.PageInfo.EndCursor
 
-				// assignees page break
-				if !prContribution.PullRequest.Assignees.PageInfo.HasNextPage {
-					if !utils.Contains("Assignee", noPages) {
-						noPages = append(noPages, "Assignee")
-						reviewsLimit = githubv4.Int(0)
+					// assignees page break
+					if !prContribution.PullRequest.Assignees.PageInfo.HasNextPage {
+						if !utils.Contains("Assignee", noPages) {
+							noPages = append(noPages, "Assignee")
+							assigneesLimit = githubv4.Int(0)
+						}
 					}
-				}
-				assigneesCursor = &prContribution.PullRequest.Assignees.PageInfo.EndCursor
+					assigneesCursor = &prContribution.PullRequest.Assignees.PageInfo.EndCursor
 
-				// commit page break
-				if !prContribution.PullRequest.Commits.PageInfo.HasNextPage {
-					if !utils.Contains("Commit", noPages) {
-						noPages = append(noPages, "Commit")
-						assigneesLimit = githubv4.Int(0)
+					// commit page break
+					if !prContribution.PullRequest.Commits.PageInfo.HasNextPage {
+						if !utils.Contains("Commit", noPages) {
+							noPages = append(noPages, "Commit")
+							commitsLimit = githubv4.Int(0)
+						}
 					}
-				}
-				commitsCursor = &prContribution.PullRequest.Commits.PageInfo.EndCursor
+					commitsCursor = &prContribution.PullRequest.Commits.PageInfo.EndCursor
 
-				// labal page break
-				if !prContribution.PullRequest.Labels.PageInfo.HasNextPage {
-					if !utils.Contains("Label", noPages) {
-						noPages = append(noPages, "Label")
-						labelsLimit = githubv4.Int(0)
+					// labal page break
+					if !prContribution.PullRequest.Labels.PageInfo.HasNextPage {
+						if !utils.Contains("Label", noPages) {
+							noPages = append(noPages, "Label")
+							labelsLimit = githubv4.Int(0)
+						}
 					}
+					labelsCursor = &prContribution.PullRequest.Labels.PageInfo.EndCursor
 				}
-				labelsCursor = &prContribution.PullRequest.Labels.PageInfo.EndCursor
 			}
 
 			// pullrequest contribution page break
@@ -387,7 +441,6 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 				}
 			}
 			contributionsCursor = &repo.Contributions.PageInfo.EndCursor
-
 		}
 		if (len(noPages)) == 5 {
 			break
