@@ -115,7 +115,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 			if len(repo.Contributions.Nodes) > 0 {
 				for _, issueContribution := range repo.Contributions.Nodes {
 					fmt.Println(issueContribution.Issue.Title)
-					_, err := github.model.GetPRByID(github.ctx, issueContribution.Issue.ID)
+					issueID, err := github.model.GetIssueByID(github.ctx, issueContribution.Issue.ID)
 					if err != nil {
 						if err == sql.ErrNoRows {
 							issueAuthorID, err := github.model.GetMemberByLogin(github.ctx, issueContribution.Issue.Author.Login)
@@ -132,10 +132,10 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 							if err != nil {
 								return err
 							}
-							_, err = github.model.InsertPR(github.ctx, models.InsertPRParams{
+							issueID, err = github.model.InsertIssue(github.ctx, models.InsertIssueParams{
 								ID:              issueContribution.Issue.ID,
-								Title:           sql.NullString{String: issueContribution.Issue.Title, Valid: true},
-								Status:          sql.NullString{String: issueContribution.Issue.State, Valid: true},
+								Title:           issueContribution.Issue.Title,
+								Status:          issueContribution.Issue.State,
 								Url:             sql.NullString{String: issueContribution.Issue.URL, Valid: true},
 								Number:          sql.NullInt32{Int32: int32(issueContribution.Issue.Number), Valid: true},
 								AuthorID:        issueAuthorID,
@@ -145,9 +145,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								GithubUpdatedAt: sql.NullTime{Time: issueContribution.Issue.UpdatedAt, Valid: true},
 							})
 							if err != nil {
+								fmt.Println(err)
 								return err
 							}
 						} else {
+							fmt.Println(err)
 							return err
 						}
 					}
@@ -163,14 +165,16 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
+										fmt.Println(err)
 										return err
 									}
 								} else {
+									fmt.Println(err)
 									return err
 								}
 							}
 
-							// assign labal
+							// assigned labal
 							_, err = github.model.GetAssignedLabalByIssue(github.ctx, models.GetAssignedLabalByIssueParams{
 								LabalID: labalID,
 								IssueID: sql.NullString{String: issueContribution.Issue.ID, Valid: true},
@@ -180,13 +184,15 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 									_, err = github.model.InsertAssignedLabal(github.ctx, models.InsertAssignedLabalParams{
 										ID:           utils.GenerateUUID(),
 										LabalID:      labalID,
-										IssueID:      sql.NullString{String: issueContribution.Issue.ID, Valid: true},
+										IssueID:      sql.NullString{String: issueID, Valid: true},
 										ActivityType: ActivityType,
 									})
 									if err != nil {
+										fmt.Println(err)
 										return err
 									}
 								} else {
+									fmt.Println(err)
 									return err
 								}
 							}
@@ -201,9 +207,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								if err == sql.ErrNoRows {
 									memID, err = github.LoadMember(issueContribution.Issue.Author.Login)
 									if err != nil {
+										fmt.Println(err)
 										return err
 									}
 								} else {
+									fmt.Println(err)
 									return err
 								}
 							}
@@ -216,13 +224,15 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 									_, err = github.model.InsertAssignee(github.ctx, models.InsertAssigneeParams{
 										ID:             utils.GenerateUUID(),
 										CollaboratorID: memID,
-										IssueID:        sql.NullString{String: issueContribution.Issue.ID, Valid: true},
+										IssueID:        sql.NullString{String: issueID, Valid: true},
 										ActivityType:   ActivityType,
 									})
 									if err != nil {
+										fmt.Println(err)
 										return err
 									}
 								} else {
+									fmt.Println(err)
 									return err
 								}
 							}

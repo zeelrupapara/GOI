@@ -62,7 +62,7 @@ type GithubCommitQ struct {
 	CommittedDate time.Time
 	URL           string
 	CommitUrl     string
-	Author     struct {
+	Author        struct {
 		User struct {
 			Login string
 		}

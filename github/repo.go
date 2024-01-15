@@ -45,10 +45,10 @@ func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs) error {
 	if err != nil {
 		return err
 	}
-	// err = github.LoadRepoByIssues(orgMember)
-	// if err != nil {
-	// 	return err
-	// }
+	err = github.LoadRepoByIssues(orgMember)
+	if err != nil {
+		return err
+	}
 	// err = github.LoadRepoByCommits(orgMember)
 	// if err != nil {
 	// 	return err
