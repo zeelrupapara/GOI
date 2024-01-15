@@ -62,8 +62,10 @@ type GithubCommitQ struct {
 	CommittedDate time.Time
 	URL           string
 	CommitUrl     string
-	Committer     struct {
-		Name string
+	Author     struct {
+		User struct {
+			Login string
+		}
 	}
 }
 
@@ -361,11 +363,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							}
 						}
 						for _, commit := range prContribution.PullRequest.Commits.Nodes {
-							fmt.Println(commit.Commit.Committer.Name)
-							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Committer.Name)
+							fmt.Println(commit.Commit.Author.User.Login)
+							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Author.User.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
-									committerID, err = github.LoadMember(commit.Commit.Committer.Name)
+									committerID, err = github.LoadMember(commit.Commit.Author.User.Login)
 									if err != nil {
 										fmt.Println("assignee", err)
 										return err

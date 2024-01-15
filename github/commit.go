@@ -145,7 +145,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 
 				for _, repoCommit := range repoBranch.Target.History.Nodes {
 					fmt.Println(repoCommit.ID)
-					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Committer.Name)
+					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
 					if err != nil {
 						return err
 					}
