@@ -27,8 +27,14 @@ Now, create a `.env` file in the project directory and add the token:
 echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" > .env.example
 cp .env.example .env
 ```
+### Step 3: Start Database
 
-### Step 3: Apply Migrations
+To start postgres database server using docker-compose file
+```bash
+docker compose up
+```
+
+### Step 4: Apply Migrations
 
 GPAT uses migrations to set up the necessary database structure. Apply the migrations using the following command:
 
@@ -36,7 +42,7 @@ GPAT uses migrations to set up the necessary database structure. Apply the migra
 go run main.go migrate up
 ```
 
-### Step 4: Retrieve Data from Github
+### Step 5: Retrieve Data from Github
 
 Fetch organization and member data from Github using:
 
