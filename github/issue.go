@@ -33,10 +33,9 @@ type GithubIssueQ struct {
 	UpdatedAt time.Time
 }
 
-func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) error {
+func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, start, end time.Time) error {
 	var noPages []string
 	var ActivityType string = "Issue"
-	end, start := utils.GetWeekTimestamps()
 	var contributionsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var contributionsCursor *githubv4.String
 	var memberName githubv4.String = githubv4.String(orgMember.Member.Login)

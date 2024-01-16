@@ -25,7 +25,7 @@ type GithubMemberQ struct {
 	GithubCreatedAt time.Time `graphql:"createdAt"`
 }
 
-func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
+func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end time.Time) error {
 	var memberQ struct {
 		Organization struct {
 			MembersWithRole struct {
@@ -107,7 +107,7 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 				Login:    org.Login,
 				Member:   member,
 				OrgMemID: orgMemID,
-			})
+			}, start, end)
 			if err != nil {
 				github.LoadMemberLog(ERROR, err)
 				return err

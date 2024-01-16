@@ -43,13 +43,13 @@ type GithubRepoQ struct {
 	} `graphql:"mergedPRs: pullRequests(states: MERGED)"`
 }
 
-func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs) error {
-	err := github.LoadRepoByPullRequests(orgMember)
+func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs, start, end time.Time) error {
+	err := github.LoadRepoByPullRequests(orgMember, start, end)
 	if err != nil {
 		github.LoadRepoLog(ERROR, err)
 		return err
 	}
-	err = github.LoadRepoByIssues(orgMember)
+	err = github.LoadRepoByIssues(orgMember, start, end)
 	if err != nil {
 		github.LoadRepoLog(ERROR, err)
 		return err

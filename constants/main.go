@@ -2,6 +2,7 @@ package constants
 
 // variables
 const (
+	DateTimeFormat string = "2006-01-02T15:04:05Z"
 )
 
 // fiber contexts

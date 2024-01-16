@@ -31,7 +31,7 @@ type PageInfo struct {
 	EndCursor   githubv4.String
 }
 
-func (github *GithubService) LoadOrganizations() error {
+func (github *GithubService) LoadOrganizations(start, end time.Time) error {
 	var organizationQ struct {
 		Viewer struct {
 			Organizations struct {
@@ -89,7 +89,7 @@ func (github *GithubService) LoadOrganizations() error {
 			}
 
 			// Get the org members
-			github.LoadMembers(org)
+			github.LoadMembers(org, start, end)
 		}
 
 		// Check for pagination

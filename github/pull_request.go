@@ -96,10 +96,9 @@ type GithubCommitsQ struct {
 	PageInfo PageInfo
 }
 
-func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArgs) error {
+func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArgs, start, end time.Time) error {
 	var noPages []string
 	var ActivityType string = "PR"
-	end, start := utils.GetWeekTimestamps()
 	var contributionsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var contributionsCursor *githubv4.String
 	var memberName githubv4.String = githubv4.String(orgMember.Member.Login)
@@ -401,7 +400,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							github.PRLog(DEBUG, fmt.Sprintf("💬 Commit: %s", commit.Commit.Message))
 							github.PRLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", commit.Commit.Author.User.Login))
 							if commit.Commit.Author.User.Login == "" {
-								continue;
+								continue
 							}
 							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Author.User.Login)
 							if err != nil {
