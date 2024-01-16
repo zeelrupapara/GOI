@@ -55,7 +55,7 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 		}
 
 		for _, member := range memberQ.Organization.MembersWithRole.Nodes {
-			fmt.Println(">>>>>>Member:", member.Login)
+			github.LoadMemberLog(DEBUG, fmt.Sprintf("👤 Member: %s", member.Login))
 			_, err := github.model.GetMemberByLogin(github.ctx, member.Login)
 			if err != nil {
 				if err == sql.ErrNoRows {

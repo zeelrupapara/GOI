@@ -92,11 +92,12 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 		}
 		err := github.client.Query(context.Background(), &commitQ, variables)
 		if err != nil {
-			github.LoadRepoByCommitLog(ERROR, err)
+			github.CommitLog(ERROR, err)
 			return nil
 		}
 
 		for _, repo := range commitQ.User.ContributionsCollection.CommitContributionsByRepository {
+			github.CommitLog(DEBUG, fmt.Sprintf("📦️ Repo: %s", repo.Repository.Name))
 			_, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
 			if err != nil {
 				if err == sql.ErrNoRows {
@@ -116,16 +117,17 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
-						github.LoadRepoByCommitLog(ERROR, err)
+						github.CommitLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadRepoByCommitLog(ERROR, err)
+					github.CommitLog(ERROR, err)
 					return err
 				}
 			}
 
 			for _, repoBranch := range repo.Repository.Refs.Nodes {
+				github.CommitLog(DEBUG, fmt.Sprintf("🌳 Branch: %s", repoBranch.Name))
 				branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
 					Name:         repoBranch.Name,
 					RepositoryID: repo.Repository.ID,
@@ -138,20 +140,20 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 							RepositoryID: repo.Repository.ID,
 						})
 						if err != nil {
-							github.LoadRepoByCommitLog(ERROR, err)
+							github.CommitLog(ERROR, err)
 							return err
 						}
 					} else {
-						github.LoadRepoByCommitLog(ERROR, err)
+						github.CommitLog(ERROR, err)
 						return err
 					}
 				}
 
 				for _, repoCommit := range repoBranch.Target.History.Nodes {
-					fmt.Println(repoCommit.ID)
+					github.CommitLog(DEBUG, fmt.Sprintf("💬 Commit: %s", repoCommit.Message))
 					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
 					if err != nil {
-						github.LoadRepoByCommitLog(ERROR, err)
+						github.CommitLog(ERROR, err)
 						return err
 					}
 					_, err = github.model.GetCommitByID(github.ctx, repoCommit.ID)
@@ -167,7 +169,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 								GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate},
 							})
 						} else {
-							github.LoadRepoByCommitLog(ERROR, err)
+							github.CommitLog(ERROR, err)
 							return err
 						}
 					}
@@ -200,7 +202,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 	return nil
 }
 
-func (github *GithubService) LoadRepoByCommitLog(level string, message interface{}) {
+func (github *GithubService) CommitLog(level string, message interface{}) {
 	const path = "commit -> LoadRepoByCommits -"
 	switch level {
 	case DEBUG:

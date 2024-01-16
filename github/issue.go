@@ -77,7 +77,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &issuesQ, variables)
 		if err != nil {
-			github.LoadRepoByIssuesLog(ERROR, err)
+			github.IssuesLog(ERROR, err)
 			return nil
 		}
 		if len(issuesQ.User.ContributionsCollection.IssueContributionsByRepository) == 0 {
@@ -85,6 +85,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 		}
 
 		for _, repo := range issuesQ.User.ContributionsCollection.IssueContributionsByRepository {
+			github.IssuesLog(DEBUG, fmt.Sprintf("📦️ Repo: %s", repo.Repository.Name))
 			// Check repo exist or not?
 			repoID, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
 			if err != nil {
@@ -105,11 +106,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
-						github.LoadRepoByIssuesLog(ERROR, err)
+						github.IssuesLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadRepoByIssuesLog(ERROR, err)
+					github.IssuesLog(ERROR, err)
 					return err
 				}
 			}
@@ -125,17 +126,17 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 						OrganizationCollaboratorID: orgMember.OrgMemID,
 					})
 					if err != nil {
-						github.LoadRepoByIssuesLog(ERROR, err)
+						github.IssuesLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadRepoByIssuesLog(ERROR, err)
+					github.IssuesLog(ERROR, err)
 					return err
 				}
 			}
 			if len(repo.Contributions.Nodes) > 0 {
 				for _, issueContribution := range repo.Contributions.Nodes {
-					fmt.Println(issueContribution.Issue.Title)
+					github.IssuesLog(DEBUG, fmt.Sprintf("🎯 Issue: %s", issueContribution.Issue.Title))
 					issueID, err := github.model.GetIssueByID(github.ctx, issueContribution.Issue.ID)
 					if err != nil {
 						if err == sql.ErrNoRows {
@@ -144,16 +145,16 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								if err == sql.ErrNoRows {
 									issueAuthorID, err = github.LoadMember(issueContribution.Issue.Author.Login)
 									if err != nil {
-										github.LoadRepoByIssuesLog(ERROR, err)
+										github.IssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByIssuesLog(ERROR, err)
+									github.IssuesLog(ERROR, err)
 									return err
 								}
 							}
 							if err != nil {
-								github.LoadRepoByIssuesLog(ERROR, err)
+								github.IssuesLog(ERROR, err)
 								return err
 							}
 							issueID, err = github.model.InsertIssue(github.ctx, models.InsertIssueParams{
@@ -169,18 +170,18 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								GithubUpdatedAt:           sql.NullTime{Time: issueContribution.Issue.UpdatedAt, Valid: true},
 							})
 							if err != nil {
-								github.LoadRepoByIssuesLog(ERROR, err)
+								github.IssuesLog(ERROR, err)
 								return err
 							}
 						} else {
-							github.LoadRepoByIssuesLog(ERROR, err)
+							github.IssuesLog(ERROR, err)
 							return err
 						}
 					}
 					// labal
 					if len(issueContribution.Issue.Labels.Nodes) > 0 {
 						for _, labal := range issueContribution.Issue.Labels.Nodes {
-							fmt.Println(labal.Name)
+							github.IssuesLog(DEBUG, fmt.Sprintf("🪧 Labal: %s", labal.Name))
 							labalID, err := github.model.GetLabalByID(github.ctx, labal.ID)
 							if err != nil {
 								if err == sql.ErrNoRows {
@@ -189,11 +190,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
-										github.LoadRepoByIssuesLog(ERROR, err)
+										github.IssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByIssuesLog(ERROR, err)
+									github.IssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -212,11 +213,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										ActivityType: ActivityType,
 									})
 									if err != nil {
-										github.LoadRepoByIssuesLog(ERROR, err)
+										github.IssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByIssuesLog(ERROR, err)
+									github.IssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -225,17 +226,17 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 
 					if len(issueContribution.Issue.Assignees.Nodes) > 0 {
 						for _, assignee := range issueContribution.Issue.Assignees.Nodes {
-							fmt.Println(assignee.Login)
+							github.IssuesLog(DEBUG, fmt.Sprintf("🧑‍💻 Assignee: %s", assignee.Login))
 							memID, err := github.model.GetMemberByLogin(github.ctx, assignee.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
 									memID, err = github.LoadMember(issueContribution.Issue.Author.Login)
 									if err != nil {
-										github.LoadRepoByIssuesLog(ERROR, err)
+										github.IssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByIssuesLog(ERROR, err)
+									github.IssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -252,11 +253,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										ActivityType:   ActivityType,
 									})
 									if err != nil {
-										github.LoadRepoByIssuesLog(ERROR, err)
+										github.IssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByIssuesLog(ERROR, err)
+									github.IssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -300,7 +301,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 	return nil
 }
 
-func (github *GithubService) LoadRepoByIssuesLog(level string, message interface{}) {
+func (github *GithubService) IssuesLog(level string, message interface{}) {
 	const path = "issue -> LoadRepoByIssues -"
 	switch level {
 	case DEBUG:

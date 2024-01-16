@@ -59,7 +59,7 @@ func (github *GithubService) LoadOrganizations() error {
 		}
 
 		for _, org := range organizationQ.Viewer.Organizations.Nodes {
-			fmt.Println("=============Login:", org.Login, "============")
+			github.LoadOrganizationsLog(DEBUG, fmt.Sprintf("🏦 Organization: %s", org.Login))
 
 			// Check if org exists or not
 			_, err := github.model.GetOrganizationByLogin(github.ctx, org.Login)

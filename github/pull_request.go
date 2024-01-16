@@ -148,7 +148,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &pullRequestsQ, variables)
 		if err != nil {
-			github.LoadRepoByPRLog(ERROR, err)
+			github.PRLog(ERROR, err)
 			return nil
 		}
 		if len(pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository) == 0 {
@@ -156,6 +156,8 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		}
 
 		for _, repo := range pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository {
+			github.PRLog(DEBUG, fmt.Sprintf("📦️ Repo:%s", repo.Repository.Name))
+
 			var repoMemberID string
 			// Check repo exist or not?
 			repoID, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
@@ -177,11 +179,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
-						github.LoadRepoByPRLog(ERROR, err)
+						github.PRLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadRepoByPRLog(ERROR, err)
+					github.PRLog(ERROR, err)
 					return err
 				}
 			}
@@ -197,17 +199,17 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						OrganizationCollaboratorID: orgMember.OrgMemID,
 					})
 					if err != nil {
-						github.LoadRepoByPRLog(ERROR, err)
+						github.PRLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadRepoByPRLog(ERROR, err)
+					github.PRLog(ERROR, err)
 					return err
 				}
 			}
 			if len(repo.Contributions.Nodes) > 0 {
 				for _, prContribution := range repo.Contributions.Nodes {
-					fmt.Println(prContribution.PullRequest.Title)
+					github.PRLog(DEBUG, fmt.Sprintf(">PR: %s", prContribution.PullRequest.Title))
 					prID, err := github.model.GetPRByID(github.ctx, prContribution.PullRequest.ID)
 					if err != nil {
 						if err == sql.ErrNoRows {
@@ -216,15 +218,14 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									prAuthorID, err = github.LoadMember(prContribution.PullRequest.Author.Login)
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
-							fmt.Println("=======+>", repoMemberID)
 							prID, err = github.model.InsertPR(github.ctx, models.InsertPRParams{
 								ID:                        prContribution.PullRequest.ID,
 								Title:                     sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
@@ -241,28 +242,28 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								GithubUpdatedAt:           sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
 							})
 							if err != nil {
-								github.LoadRepoByPRLog(ERROR, err)
+								github.PRLog(ERROR, err)
 								return err
 							}
 						} else {
-							github.LoadRepoByPRLog(ERROR, err)
+							github.PRLog(ERROR, err)
 							return err
 						}
 					}
 					// review
 					if len(prContribution.PullRequest.Reviews.Nodes) > 0 {
 						for _, review := range prContribution.PullRequest.Reviews.Nodes {
-							fmt.Println(review.Author.Login)
+							github.PRLog(DEBUG, fmt.Sprintf("👀 Reviewer: %s", review.Author.Login))
 							reviwerID, err := github.model.GetMemberByLogin(github.ctx, review.Author.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
 									reviwerID, err = github.LoadMember(review.Author.Login)
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -279,7 +280,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
 									})
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -289,7 +290,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 					// labal
 					if len(prContribution.PullRequest.Labels.Nodes) > 0 {
 						for _, labal := range prContribution.PullRequest.Labels.Nodes {
-							fmt.Println(labal.Name)
+							github.PRLog(DEBUG, fmt.Sprintf("🪧 Labal: %s", labal.Name))
 							labalID, err := github.model.GetLabalByID(github.ctx, labal.ID)
 							if err != nil {
 								if err == sql.ErrNoRows {
@@ -298,16 +299,16 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
 
-							// assign labal
+							// Assignned labal
 							_, err = github.model.GetAssignedLabalByPR(github.ctx, models.GetAssignedLabalByPRParams{
 								LabalID: labalID,
 								PrID:    sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
@@ -321,32 +322,31 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ActivityType: ActivityType,
 									})
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
-
 						}
 					}
 
 					// assignee
 					if len(prContribution.PullRequest.Assignees.Nodes) > 0 {
+						github.PRLog(DEBUG, fmt.Sprintf("🧑‍💻 Assginee: %s", prContribution.PullRequest.Branch))
 						for _, assignee := range prContribution.PullRequest.Assignees.Nodes {
-							fmt.Println(assignee.Login)
 							memID, err := github.model.GetMemberByLogin(github.ctx, assignee.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
 									memID, err = github.LoadMember(assignee.Login)
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -363,11 +363,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ActivityType:   ActivityType,
 									})
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -376,6 +376,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 
 					// commits
 					if len(prContribution.PullRequest.Commits.Nodes) > 0 {
+						github.PRLog(DEBUG, fmt.Sprintf("🌳 Branch: %s", prContribution.PullRequest.Branch))
 						branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
 							Name:         prContribution.PullRequest.Branch,
 							RepositoryID: repo.Repository.ID,
@@ -388,26 +389,26 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 									RepositoryID: repo.Repository.ID,
 								})
 								if err != nil {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							} else {
-								github.LoadRepoByPRLog(ERROR, err)
+								github.PRLog(ERROR, err)
 								return err
 							}
 						}
 						for _, commit := range prContribution.PullRequest.Commits.Nodes {
-							fmt.Println(commit.Commit.Author.User.Login)
+							github.PRLog(DEBUG, fmt.Sprintf("💬 Commit: %s", prContribution.PullRequest.Branch))
 							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Author.User.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
 									committerID, err = github.LoadMember(commit.Commit.Author.User.Login)
 									if err != nil {
-										github.LoadRepoByPRLog(ERROR, err)
+										github.PRLog(ERROR, err)
 										return err
 									}
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -425,7 +426,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
 									})
 								} else {
-									github.LoadRepoByPRLog(ERROR, err)
+									github.PRLog(ERROR, err)
 									return err
 								}
 							}
@@ -486,7 +487,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 	return nil
 }
 
-func (github *GithubService) LoadRepoByPRLog(level string, message interface{}) {
+func (github *GithubService) PRLog(level string, message interface{}) {
 	const path = "commit -> LoadRepoByPullRequests -"
 	switch level {
 	case DEBUG:
