@@ -63,7 +63,7 @@ func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs) error {
 }
 
 func (github *GithubService) LoadRepoLog(level string, message interface{}) {
-	const path = "commit -> LoadRepo -"
+	const path = "repo -> LoadRepo -"
 	switch level {
 	case DEBUG:
 		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))

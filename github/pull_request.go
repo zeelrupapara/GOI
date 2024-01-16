@@ -488,7 +488,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 }
 
 func (github *GithubService) PRLog(level string, message interface{}) {
-	const path = "commit -> LoadRepoByPullRequests -"
+	const path = "pull_request -> LoadRepoByPullRequests -"
 	switch level {
 	case DEBUG:
 		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))

@@ -123,7 +123,7 @@ func (github *GithubService) LoadOrganization(org string) error {
 }
 
 func (github *GithubService) LoadOrganizationsLog(level string, message interface{}) {
-	const path = "commit -> LoadOrganizations -"
+	const path = "organization -> LoadOrganizations -"
 	switch level {
 	case DEBUG:
 		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))

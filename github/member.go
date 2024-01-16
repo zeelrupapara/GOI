@@ -161,7 +161,7 @@ func (github *GithubService) LoadMember(username string) (string, error) {
 }
 
 func (github *GithubService) LoadMemberLog(level string, message interface{}) {
-	const path = "commit -> LoadMembers -"
+	const path = "member -> LoadMembers -"
 	switch level {
 	case DEBUG:
 		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
