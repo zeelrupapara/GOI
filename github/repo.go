@@ -1,7 +1,10 @@
 package github
 
 import (
+	"fmt"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 type GithubOrgMemberArgs struct {
@@ -43,16 +46,32 @@ type GithubRepoQ struct {
 func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs) error {
 	err := github.LoadRepoByPullRequests(orgMember)
 	if err != nil {
+		github.LoadRepoLog(ERROR, err)
 		return err
 	}
-	// err = github.LoadRepoByIssues(orgMember)
-	// if err != nil {
-	// 	return err
-	// }
+	err = github.LoadRepoByIssues(orgMember)
+	if err != nil {
+		github.LoadRepoLog(ERROR, err)
+		return err
+	}
 	// err = github.LoadRepoByCommits(orgMember)
 	// if err != nil {
+	// 	github.LoadRepoLog(ERROR, err)
 	// 	return err
 	// }
-
 	return nil
+}
+
+func (github *GithubService) LoadRepoLog(level string, message interface{}) {
+	const path = "commit -> LoadRepo -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }

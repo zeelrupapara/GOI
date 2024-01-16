@@ -1,5 +1,6 @@
 -- name: InsertRepo :one
-INSERT INTO "repositories" (
+INSERT INTO
+    "repositories" (
         "id",
         "name",
         "is_private",
@@ -28,9 +29,11 @@ VALUES (
         $11,
         $12,
         $13
-    )
-RETURNING repositories.id;
+    ) RETURNING repositories.id;
 -- name: GetRepoByID :one
 SELECT repositories.id
 FROM "repositories"
 WHERE repositories.id = $1;
+
+-- name: GetRepoDetailsByID :one
+select * from repositories where id = $1;

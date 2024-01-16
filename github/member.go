@@ -10,6 +10,7 @@ import (
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
 	"github.com/shurcooL/githubv4"
+	"go.uber.org/zap"
 )
 
 type GithubMemberQ struct {
@@ -49,7 +50,7 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &memberQ, variables)
 		if err != nil {
-			fmt.Println("Error executing query:", err)
+			github.LoadMemberLog(ERROR, err)
 			return nil
 		}
 
@@ -70,9 +71,11 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 						GithubUpdatedAt: sql.NullTime{Time: member.GithubUpdatedAt, Valid: true},
 					})
 					if err != nil {
+						github.LoadMemberLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadMemberLog(ERROR, err)
 					return err
 				}
 			}
@@ -90,10 +93,11 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 						CollaboratorID: member.ID,
 					})
 					if err != nil {
-						fmt.Println("err", err)
+						github.LoadMemberLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadMemberLog(ERROR, err)
 					return err
 				}
 			}
@@ -105,6 +109,7 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ) error {
 				OrgMemID: orgMemID,
 			})
 			if err != nil {
+				github.LoadMemberLog(ERROR, err)
 				return err
 			}
 		}
@@ -132,6 +137,7 @@ func (github *GithubService) LoadMember(username string) (string, error) {
 
 	err := github.client.Query(context.Background(), &memberQ, variables)
 	if err != nil {
+		github.LoadMemberLog(ERROR, err)
 		return memID, err
 	}
 
@@ -147,8 +153,23 @@ func (github *GithubService) LoadMember(username string) (string, error) {
 		GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
 	})
 	if err != nil {
+		github.LoadMemberLog(ERROR, err)
 		return memID, err
 	}
 
 	return memID, nil
+}
+
+func (github *GithubService) LoadMemberLog(level string, message interface{}) {
+	const path = "commit -> LoadMembers -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }

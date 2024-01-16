@@ -9,6 +9,7 @@ import (
 	"github.com/Improwised/GPAT/constants"
 	"github.com/Improwised/GPAT/models"
 	"github.com/shurcooL/githubv4"
+	"go.uber.org/zap"
 )
 
 type GithubOrganizationQ struct {
@@ -53,7 +54,7 @@ func (github *GithubService) LoadOrganizations() error {
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &organizationQ, variables)
 		if err != nil {
-			fmt.Println("Error executing query:", err)
+			github.LoadOrganizationsLog(ERROR, err)
 			return nil
 		}
 
@@ -78,9 +79,11 @@ func (github *GithubService) LoadOrganizations() error {
 						GithubCreatedAt: sql.NullTime{Time: org.GithubCreatedAt, Valid: true},
 					})
 					if err != nil {
+						github.LoadOrganizationsLog(ERROR, err)
 						return nil
 					}
 				} else {
+					github.LoadOrganizationsLog(ERROR, err)
 					return err
 				}
 			}
@@ -113,9 +116,22 @@ func (github *GithubService) LoadOrganization(org string) error {
 	// Execute the graphQL query
 	err := github.client.Query(context.Background(), &query, variables)
 	if err != nil {
-		fmt.Println("Error executing query:", err)
-		return nil
+		github.LoadOrganizationsLog(ERROR, err)
+		return err
 	}
-	fmt.Println(query.Organization)
 	return nil
+}
+
+func (github *GithubService) LoadOrganizationsLog(level string, message interface{}) {
+	const path = "commit -> LoadOrganizations -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }

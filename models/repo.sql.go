@@ -22,8 +22,37 @@ func (q *Queries) GetRepoByID(ctx context.Context, id string) (string, error) {
 	return id, err
 }
 
+const getRepoDetailsByID = `-- name: GetRepoDetailsByID :one
+select id, name, is_private, default_branch, url, homepage_url, open_issues, closed_issues, open_prs, closed_prs, merged_prs, github_created_at, github_updated_at, created_at, updated_at, deleted_at from repositories where id = $1
+`
+
+func (q *Queries) GetRepoDetailsByID(ctx context.Context, id string) (Repository, error) {
+	row := q.db.QueryRowContext(ctx, getRepoDetailsByID, id)
+	var i Repository
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.IsPrivate,
+		&i.DefaultBranch,
+		&i.Url,
+		&i.HomepageUrl,
+		&i.OpenIssues,
+		&i.ClosedIssues,
+		&i.OpenPrs,
+		&i.ClosedPrs,
+		&i.MergedPrs,
+		&i.GithubCreatedAt,
+		&i.GithubUpdatedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const insertRepo = `-- name: InsertRepo :one
-INSERT INTO "repositories" (
+INSERT INTO
+    "repositories" (
         "id",
         "name",
         "is_private",
@@ -52,8 +81,7 @@ VALUES (
         $11,
         $12,
         $13
-    )
-RETURNING repositories.id
+    ) RETURNING repositories.id
 `
 
 type InsertRepoParams struct {

@@ -37,6 +37,11 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 		return err
 	}
 
+	err = setupReportsController(v1, db, logger, middlewares)
+	if err != nil {
+		return err
+	}
+
 	mu.Unlock()
 	return nil
 }
@@ -49,5 +54,16 @@ func setupOrganizationController(v1 fiber.Router, db *sql.DB, logger *zap.Logger
 
 	organizationRouter := v1.Group("/organizations")
 	organizationRouter.Get("/", organizationController.GetOrganizations)
+	return nil
+}
+
+func setupReportsController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	reportController, err := controller.NewReportController(db, logger)
+	if err != nil {
+		return err
+	}
+
+	reportRouter := v1.Group("/report")
+	reportRouter.Get("/users", reportController.GetUsersReport)
 	return nil
 }

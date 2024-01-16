@@ -11,6 +11,14 @@ import (
 	"golang.org/x/oauth2"
 )
 
+
+const (
+	DEBUG = "DEBUG"
+	INFO = "INFO"
+	ERROR = "ERROR"
+	WARNING = "WARNING"
+)
+
 type GithubService struct {
 	client *githubv4.Client
 	model  *models.Queries

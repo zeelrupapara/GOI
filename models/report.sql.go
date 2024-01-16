@@ -9,8 +9,32 @@ import (
 	"context"
 )
 
+const getCollaboratorByLogin = `-- name: GetCollaboratorByLogin :one
+select id, login, name, email, url, avatar_url, website_url, github_created_at, github_updated_at, created_at, updated_at, deleted_at from collaborators where login = $1
+`
+
+func (q *Queries) GetCollaboratorByLogin(ctx context.Context, login string) (Collaborator, error) {
+	row := q.db.QueryRowContext(ctx, getCollaboratorByLogin, login)
+	var i Collaborator
+	err := row.Scan(
+		&i.ID,
+		&i.Login,
+		&i.Name,
+		&i.Email,
+		&i.Url,
+		&i.AvatarUrl,
+		&i.WebsiteUrl,
+		&i.GithubCreatedAt,
+		&i.GithubUpdatedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+	)
+	return i, err
+}
+
 const getCollaborators = `-- name: GetCollaborators :many
-SELECT id, login, name, email, url, avatar_url, website_url, github_created_at, github_updated_at, created_at, updated_at, deleted_at FROM collaborators
+select id, login, name, email, url, avatar_url, website_url, github_created_at, github_updated_at, created_at, updated_at, deleted_at from collaborators
 `
 
 func (q *Queries) GetCollaborators(ctx context.Context) ([]Collaborator, error) {
@@ -36,6 +60,74 @@ func (q *Queries) GetCollaborators(ctx context.Context) ([]Collaborator, error) 
 			&i.UpdatedAt,
 			&i.DeletedAt,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCollaboratorsOrgsByCollaboratorID = `-- name: GetCollaboratorsOrgsByCollaboratorID :many
+select id, organization_id, collaborator_id, created_at, updated_at, deleted_at
+from
+    organization_collaborators
+where collaborator_id = $1
+`
+
+func (q *Queries) GetCollaboratorsOrgsByCollaboratorID(ctx context.Context, collaboratorID string) ([]OrganizationCollaborator, error) {
+	rows, err := q.db.QueryContext(ctx, getCollaboratorsOrgsByCollaboratorID, collaboratorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []OrganizationCollaborator
+	for rows.Next() {
+		var i OrganizationCollaborator
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizationID,
+			&i.CollaboratorID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getRepoCollaboratorsByOrgCollaboratorID = `-- name: GetRepoCollaboratorsByOrgCollaboratorID :many
+select id, repo_id, organization_collaborator_id
+from
+    repository_collaborators
+where
+    organization_collaborator_id = $1
+`
+
+func (q *Queries) GetRepoCollaboratorsByOrgCollaboratorID(ctx context.Context, organizationCollaboratorID string) ([]RepositoryCollaborator, error) {
+	rows, err := q.db.QueryContext(ctx, getRepoCollaboratorsByOrgCollaboratorID, organizationCollaboratorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RepositoryCollaborator
+	for rows.Next() {
+		var i RepositoryCollaborator
+		if err := rows.Scan(&i.ID, &i.RepoID, &i.OrganizationCollaboratorID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

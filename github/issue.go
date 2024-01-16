@@ -10,6 +10,7 @@ import (
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
 	"github.com/shurcooL/githubv4"
+	"go.uber.org/zap"
 )
 
 type GithubIssueContribution struct {
@@ -76,7 +77,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &issuesQ, variables)
 		if err != nil {
-			fmt.Println("Error executing query:", err)
+			github.LoadRepoByIssuesLog(ERROR, err)
 			return nil
 		}
 		if len(issuesQ.User.ContributionsCollection.IssueContributionsByRepository) == 0 {
@@ -104,9 +105,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
+						github.LoadRepoByIssuesLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadRepoByIssuesLog(ERROR, err)
 					return err
 				}
 			}
@@ -122,9 +125,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 						OrganizationCollaboratorID: orgMember.OrgMemID,
 					})
 					if err != nil {
+						github.LoadRepoByIssuesLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadRepoByIssuesLog(ERROR, err)
 					return err
 				}
 			}
@@ -139,13 +144,16 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								if err == sql.ErrNoRows {
 									issueAuthorID, err = github.LoadMember(issueContribution.Issue.Author.Login)
 									if err != nil {
+										github.LoadRepoByIssuesLog(ERROR, err)
 										return err
 									}
 								} else {
+									github.LoadRepoByIssuesLog(ERROR, err)
 									return err
 								}
 							}
 							if err != nil {
+								github.LoadRepoByIssuesLog(ERROR, err)
 								return err
 							}
 							issueID, err = github.model.InsertIssue(github.ctx, models.InsertIssueParams{
@@ -161,11 +169,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								GithubUpdatedAt:           sql.NullTime{Time: issueContribution.Issue.UpdatedAt, Valid: true},
 							})
 							if err != nil {
-								fmt.Println(err)
+								github.LoadRepoByIssuesLog(ERROR, err)
 								return err
 							}
 						} else {
-							fmt.Println(err)
+							github.LoadRepoByIssuesLog(ERROR, err)
 							return err
 						}
 					}
@@ -181,11 +189,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
-										fmt.Println(err)
+										github.LoadRepoByIssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println(err)
+									github.LoadRepoByIssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -204,11 +212,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										ActivityType: ActivityType,
 									})
 									if err != nil {
-										fmt.Println(err)
+										github.LoadRepoByIssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println(err)
+									github.LoadRepoByIssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -223,11 +231,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 								if err == sql.ErrNoRows {
 									memID, err = github.LoadMember(issueContribution.Issue.Author.Login)
 									if err != nil {
-										fmt.Println(err)
+										github.LoadRepoByIssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println(err)
+									github.LoadRepoByIssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -244,11 +252,11 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 										ActivityType:   ActivityType,
 									})
 									if err != nil {
-										fmt.Println(err)
+										github.LoadRepoByIssuesLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println(err)
+									github.LoadRepoByIssuesLog(ERROR, err)
 									return err
 								}
 							}
@@ -290,4 +298,18 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs) err
 		}
 	}
 	return nil
+}
+
+func (github *GithubService) LoadRepoByIssuesLog(level string, message interface{}) {
+	const path = "issue -> LoadRepoByIssues -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }

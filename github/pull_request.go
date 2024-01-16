@@ -10,6 +10,7 @@ import (
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
 	"github.com/shurcooL/githubv4"
+	"go.uber.org/zap"
 )
 
 type GithubPRContribution struct {
@@ -147,7 +148,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &pullRequestsQ, variables)
 		if err != nil {
-			fmt.Println("Error executing query:", err)
+			github.LoadRepoByPRLog(ERROR, err)
 			return nil
 		}
 		if len(pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository) == 0 {
@@ -176,10 +177,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
-						fmt.Print(err)
+						github.LoadRepoByPRLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadRepoByPRLog(ERROR, err)
 					return err
 				}
 			}
@@ -195,11 +197,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						OrganizationCollaboratorID: orgMember.OrgMemID,
 					})
 					if err != nil {
-						fmt.Println(err)
+						github.LoadRepoByPRLog(ERROR, err)
 						return err
 					}
 				} else {
-					fmt.Println(err)
+					github.LoadRepoByPRLog(ERROR, err)
 					return err
 				}
 			}
@@ -214,9 +216,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									prAuthorID, err = github.LoadMember(prContribution.PullRequest.Author.Login)
 									if err != nil {
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -237,11 +241,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								GithubUpdatedAt:           sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
 							})
 							if err != nil {
-								fmt.Print(err)
+								github.LoadRepoByPRLog(ERROR, err)
 								return err
 							}
 						} else {
-							fmt.Print(err)
+							github.LoadRepoByPRLog(ERROR, err)
 							return err
 						}
 					}
@@ -254,13 +258,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									reviwerID, err = github.LoadMember(review.Author.Login)
 									if err != nil {
-										fmt.Print(err)
-
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Print(err)
-
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -277,8 +279,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
 									})
 								} else {
-									fmt.Print(err)
-
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -297,13 +298,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										Name: sql.NullString{String: labal.Name, Valid: true},
 									})
 									if err != nil {
-										fmt.Print(err)
-
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Print(err)
-
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -322,13 +321,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ActivityType: ActivityType,
 									})
 									if err != nil {
-										fmt.Print(err)
-
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Print(err)
-
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -345,11 +342,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									memID, err = github.LoadMember(assignee.Login)
 									if err != nil {
-										fmt.Println("member", err)
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println("jr", err)
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -366,11 +363,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ActivityType:   ActivityType,
 									})
 									if err != nil {
-										fmt.Println("fdhk", err)
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println("assignee", err)
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -391,11 +388,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 									RepositoryID: repo.Repository.ID,
 								})
 								if err != nil {
-									fmt.Println("assignee", err)
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							} else {
-								fmt.Println("assignee", err)
+								github.LoadRepoByPRLog(ERROR, err)
 								return err
 							}
 						}
@@ -406,11 +403,11 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								if err == sql.ErrNoRows {
 									committerID, err = github.LoadMember(commit.Commit.Author.User.Login)
 									if err != nil {
-										fmt.Println("assignee", err)
+										github.LoadRepoByPRLog(ERROR, err)
 										return err
 									}
 								} else {
-									fmt.Println("assignee", err)
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -428,8 +425,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
 									})
 								} else {
-									fmt.Print(err)
-
+									github.LoadRepoByPRLog(ERROR, err)
 									return err
 								}
 							}
@@ -488,4 +484,18 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		}
 	}
 	return nil
+}
+
+func (github *GithubService) LoadRepoByPRLog(level string, message interface{}) {
+	const path = "commit -> LoadRepoByPullRequests -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }

@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS "organizations" (
   "id" VARCHAR (50) PRIMARY KEY NOT NULL,
   "login" VARCHAR (100) NOT NULL,
-  "name" TEXT,
+  "name" TEXT NOT NULL DEFAULT NULL,
   "email" VARCHAR,
   "location" TEXT,
   "description" TEXT,

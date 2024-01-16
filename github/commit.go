@@ -10,6 +10,7 @@ import (
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
 	"github.com/shurcooL/githubv4"
+	"go.uber.org/zap"
 )
 
 type GithubCommitRepoQ struct {
@@ -91,7 +92,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 		}
 		err := github.client.Query(context.Background(), &commitQ, variables)
 		if err != nil {
-			fmt.Println("Error executing query:", err)
+			github.LoadRepoByCommitLog(ERROR, err)
 			return nil
 		}
 
@@ -115,9 +116,11 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 					})
 					if err != nil {
+						github.LoadRepoByCommitLog(ERROR, err)
 						return err
 					}
 				} else {
+					github.LoadRepoByCommitLog(ERROR, err)
 					return err
 				}
 			}
@@ -135,9 +138,11 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 							RepositoryID: repo.Repository.ID,
 						})
 						if err != nil {
+							github.LoadRepoByCommitLog(ERROR, err)
 							return err
 						}
 					} else {
+						github.LoadRepoByCommitLog(ERROR, err)
 						return err
 					}
 				}
@@ -146,6 +151,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 					fmt.Println(repoCommit.ID)
 					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
 					if err != nil {
+						github.LoadRepoByCommitLog(ERROR, err)
 						return err
 					}
 					_, err = github.model.GetCommitByID(github.ctx, repoCommit.ID)
@@ -161,6 +167,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 								GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate},
 							})
 						} else {
+							github.LoadRepoByCommitLog(ERROR, err)
 							return err
 						}
 					}
@@ -191,4 +198,18 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 		}
 	}
 	return nil
+}
+
+func (github *GithubService) LoadRepoByCommitLog(level string, message interface{}) {
+	const path = "commit -> LoadRepoByCommits -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
 }
