@@ -336,7 +336,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 					// assignee
 					if len(prContribution.PullRequest.Assignees.Nodes) > 0 {
 						for _, assignee := range prContribution.PullRequest.Assignees.Nodes {
-							github.PRLog(DEBUG, fmt.Sprintf("🧑‍💻 Assginee: %s",assignee.Login ))
+							github.PRLog(DEBUG, fmt.Sprintf("🧑‍💻 Assginee: %s", assignee.Login))
 							memID, err := github.model.GetMemberByLogin(github.ctx, assignee.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
@@ -400,6 +400,9 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						for _, commit := range prContribution.PullRequest.Commits.Nodes {
 							github.PRLog(DEBUG, fmt.Sprintf("💬 Commit: %s", commit.Commit.Message))
 							github.PRLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", commit.Commit.Author.User.Login))
+							if commit.Commit.Author.User.Login == "" {
+								continue;
+							}
 							committerID, err := github.model.GetMemberByLogin(github.ctx, commit.Commit.Author.User.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
