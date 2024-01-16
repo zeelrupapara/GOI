@@ -20,6 +20,7 @@ type AppConfig struct {
 	Port          string `envconfig:"APP_PORT"`
 	Secret        string `envconfig:"JWT_SECRET"`
 	DB            DBConfig
+	Github 		  GithubConfig
 }
 
 // GetConfig Collects all configs

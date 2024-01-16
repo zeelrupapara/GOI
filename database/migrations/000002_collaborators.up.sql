@@ -1,8 +1,8 @@
 -- +migrate Up
 CREATE TABLE IF NOT EXISTS "collaborators" (
   "id" VARCHAR (50) PRIMARY KEY NOT NULL,
+  "login" varchar (100) NOT NULL,
   "name" VARCHAR (100),
-  "username" varchar (100) NOT NULL,
   "email" VARCHAR,
   "url" TEXT,
   "avatar_url" TEXT,
