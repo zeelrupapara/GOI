@@ -151,7 +151,7 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 
 				for _, repoCommit := range repoBranch.Target.History.Nodes {
 					github.CommitLog(DEBUG, fmt.Sprintf("💬 Commit: %s", repoCommit.Message))
-					github.PRLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", repoCommit.Author.User.Login))
+					github.CommitLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", repoCommit.Author.User.Login))
 
 					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
 					if err != nil {

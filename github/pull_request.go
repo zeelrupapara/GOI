@@ -580,13 +580,34 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 			}
 
 			// pullrequest contribution page break
-			if !repo.Contributions.PageInfo.HasNextPage {
+			if !repo.Contributions.PageInfo.HasNextPage && len(noPages) == 5 {
 				if !utils.Contains("PullRequest", noPages) {
 					noPages = append(noPages, "PullRequest")
 					contributionsLimit = githubv4.Int(0)
 				}
 			}
 			contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+			if len(noPages) == 5 {
+				// ReviewRequests Reset
+				reviewRequestsLimit = githubv4.Int(constants.DefaultLimit)
+				reviewRequestsCursor = nil
+
+				// LatestOpinionatedReviews Reset
+				latestOpinionatedReviewsLimit = githubv4.Int(constants.DefaultLimit)
+				latestOpinionatedReviewsCursor = nil
+
+				// Commit Reset
+				commitsLimit = githubv4.Int(constants.DefaultLimit)
+				commitsCursor = nil
+
+				// Assaignee Reset
+				assigneesCursor = nil
+				assigneesLimit = githubv4.Int(constants.DefaultLimit)
+
+				// Label Reset
+				labelsCursor = nil
+				labelsLimit = githubv4.Int(constants.DefaultLimit)
+			}
 		}
 		if (len(noPages)) == 6 {
 			break

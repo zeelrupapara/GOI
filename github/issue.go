@@ -280,19 +280,26 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, sta
 					}
 					labelsCursor = &issueContribution.Issue.Labels.PageInfo.EndCursor
 				}
-			}
 
-			// Issue contribution page break
-			if !repo.Contributions.PageInfo.HasNextPage {
-				if !utils.Contains("Issue", noPages) {
-					noPages = append(noPages, "Issue")
-					contributionsLimit = githubv4.Int(0)
+				// Issue contribution page break
+				if (!repo.Contributions.PageInfo.HasNextPage) && len(noPages) == 2 {
+					if !utils.Contains("Issue", noPages) {
+						noPages = append(noPages, "Issue")
+					}
+				}
+				contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+				if len(noPages) == 2 {
+					// Assaignee Reset
+					assigneesCursor = nil
+					assigneesLimit = githubv4.Int(constants.DefaultLimit)
+					
+					// Label Reset
+					labelsCursor = nil
+					labelsLimit = githubv4.Int(constants.DefaultLimit)
 				}
 			}
-			contributionsCursor = &repo.Contributions.PageInfo.EndCursor
-
 		}
-		if (len(noPages)) == 3 {
+		if len(noPages) == 3 {
 			break
 		}
 	}
