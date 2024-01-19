@@ -287,12 +287,14 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, sta
 						noPages = append(noPages, "Issue")
 					}
 				}
-				contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+				if repo.Contributions.PageInfo.HasNextPage && len(noPages) == 5 {
+					contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+				}
 				if len(noPages) == 2 {
 					// Assaignee Reset
 					assigneesCursor = nil
 					assigneesLimit = githubv4.Int(constants.DefaultLimit)
-					
+
 					// Label Reset
 					labelsCursor = nil
 					labelsLimit = githubv4.Int(constants.DefaultLimit)

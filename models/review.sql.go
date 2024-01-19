@@ -76,20 +76,18 @@ func (q *Queries) InsertReview(ctx context.Context, arg InsertReviewParams) (str
 const updateReview = `-- name: UpdateReview :one
 UPDATE "reviews"
 SET
-    id = $2,
-    reviewer_id = $3,
-    pr_id = $4,
-    status = $5,
-    github_created_at = $6,
-    github_updated_at = $7,
-    github_submitted_at = $8
+    reviewer_id = $2,
+    pr_id = $3,
+    status = $4,
+    github_created_at = $5,
+    github_updated_at = $6,
+    github_submitted_at = $7
 WHERE
     id = $1 RETURNING reviews.id
 `
 
 type UpdateReviewParams struct {
 	ID                string       `json:"id"`
-	ID_2              string       `json:"id_2"`
 	ReviewerID        string       `json:"reviewer_id"`
 	PrID              string       `json:"pr_id"`
 	Status            string       `json:"status"`
@@ -101,7 +99,6 @@ type UpdateReviewParams struct {
 func (q *Queries) UpdateReview(ctx context.Context, arg UpdateReviewParams) (string, error) {
 	row := q.db.QueryRowContext(ctx, updateReview,
 		arg.ID,
-		arg.ID_2,
 		arg.ReviewerID,
 		arg.PrID,
 		arg.Status,

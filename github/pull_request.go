@@ -364,7 +364,6 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							}
 							_, err = github.model.UpdateReview(github.ctx, models.UpdateReviewParams{
 								ID:                reviewID,
-								ID_2:              latestOpinionatedReview.ID,
 								ReviewerID:        reviewerID,
 								PrID:              prContribution.PullRequest.ID,
 								Status:            latestOpinionatedReview.State,
@@ -520,9 +519,9 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										BranchID:            branchID,
 										AuthorID:            committerID,
 										PrID:                sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
-										Url:                 sql.NullString{String: commit.Commit.URL},
-										CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl},
-										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
+										Url:                 sql.NullString{String: commit.Commit.URL, Valid: true},
+										CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl, Valid: true},
+										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate, Valid: true},
 									})
 								} else {
 									github.PRLog(ERROR, err)
@@ -577,36 +576,37 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 					}
 					labelsCursor = &prContribution.PullRequest.Labels.PageInfo.EndCursor
 				}
-			}
-
-			// pullrequest contribution page break
-			if !repo.Contributions.PageInfo.HasNextPage && len(noPages) == 5 {
-				if !utils.Contains("PullRequest", noPages) {
-					noPages = append(noPages, "PullRequest")
-					contributionsLimit = githubv4.Int(0)
+				// pullrequest contribution page break
+				if (!repo.Contributions.PageInfo.HasNextPage) && len(noPages) == 5 {
+					if !utils.Contains("PullRequest", noPages) {
+						noPages = append(noPages, "PullRequest")
+						contributionsLimit = githubv4.Int(0)
+					}
 				}
-			}
-			contributionsCursor = &repo.Contributions.PageInfo.EndCursor
-			if len(noPages) == 5 {
-				// ReviewRequests Reset
-				reviewRequestsLimit = githubv4.Int(constants.DefaultLimit)
-				reviewRequestsCursor = nil
+				if repo.Contributions.PageInfo.HasNextPage && len(noPages) == 5 {
+					contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+				}
+				if len(noPages) == 5 {
+					// ReviewRequests Reset
+					reviewRequestsLimit = githubv4.Int(constants.DefaultLimit)
+					reviewRequestsCursor = nil
 
-				// LatestOpinionatedReviews Reset
-				latestOpinionatedReviewsLimit = githubv4.Int(constants.DefaultLimit)
-				latestOpinionatedReviewsCursor = nil
+					// LatestOpinionatedReviews Reset
+					latestOpinionatedReviewsLimit = githubv4.Int(constants.DefaultLimit)
+					latestOpinionatedReviewsCursor = nil
 
-				// Commit Reset
-				commitsLimit = githubv4.Int(constants.DefaultLimit)
-				commitsCursor = nil
+					// Commit Reset
+					commitsLimit = githubv4.Int(constants.DefaultLimit)
+					commitsCursor = nil
 
-				// Assaignee Reset
-				assigneesCursor = nil
-				assigneesLimit = githubv4.Int(constants.DefaultLimit)
+					// Assaignee Reset
+					assigneesCursor = nil
+					assigneesLimit = githubv4.Int(constants.DefaultLimit)
 
-				// Label Reset
-				labelsCursor = nil
-				labelsLimit = githubv4.Int(constants.DefaultLimit)
+					// Label Reset
+					labelsCursor = nil
+					labelsLimit = githubv4.Int(constants.DefaultLimit)
+				}
 			}
 		}
 		if (len(noPages)) == 6 {

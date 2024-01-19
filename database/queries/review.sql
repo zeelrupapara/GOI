@@ -18,12 +18,11 @@ WHERE
 -- name: UpdateReview :one
 UPDATE "reviews"
 SET
-    id = $2,
-    reviewer_id = $3,
-    pr_id = $4,
-    status = $5,
-    github_created_at = $6,
-    github_updated_at = $7,
-    github_submitted_at = $8
+    reviewer_id = $2,
+    pr_id = $3,
+    status = $4,
+    github_created_at = $5,
+    github_updated_at = $6,
+    github_submitted_at = $7
 WHERE
     id = $1 RETURNING reviews.id;
