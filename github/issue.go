@@ -35,7 +35,6 @@ type GithubIssueQ struct {
 
 func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, start, end time.Time) error {
 	var noPages []string
-	var ActivityType string = "Issue"
 	var contributionsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var contributionsCursor *githubv4.String
 	var memberName githubv4.String = githubv4.String(orgMember.Member.Login)
@@ -209,7 +208,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, sta
 										ID:           utils.GenerateUUID(),
 										LabalID:      labalID,
 										IssueID:      sql.NullString{String: issueID, Valid: true},
-										ActivityType: ActivityType,
+										ActivityType: constants.ActivityIssue,
 									})
 									if err != nil {
 										github.IssuesLog(ERROR, err)
@@ -249,7 +248,7 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, sta
 										ID:             utils.GenerateUUID(),
 										CollaboratorID: memID,
 										IssueID:        sql.NullString{String: issueID, Valid: true},
-										ActivityType:   ActivityType,
+										ActivityType:   constants.ActivityIssue,
 									})
 									if err != nil {
 										github.IssuesLog(ERROR, err)
