@@ -50,12 +50,12 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end tim
 		// Execute the graphQL query
 		err := github.client.Query(context.Background(), &memberQ, variables)
 		if err != nil {
-			github.LoadMemberLog(ERROR, err)
+			github.LoadMembersLog(ERROR, err)
 			return nil
 		}
 
 		for _, member := range memberQ.Organization.MembersWithRole.Nodes {
-			github.LoadMemberLog(DEBUG, fmt.Sprintf("👤 Member: %s", member.Login))
+			github.LoadMembersLog(DEBUG, fmt.Sprintf("👤 Member: %s", member.Login))
 			_, err := github.model.GetMemberByLogin(github.ctx, member.Login)
 			if err != nil {
 				if err == sql.ErrNoRows {
@@ -71,11 +71,11 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end tim
 						GithubUpdatedAt: sql.NullTime{Time: member.GithubUpdatedAt, Valid: true},
 					})
 					if err != nil {
-						github.LoadMemberLog(ERROR, err)
+						github.LoadMembersLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadMemberLog(ERROR, err)
+					github.LoadMembersLog(ERROR, err)
 					return err
 				}
 			}
@@ -93,11 +93,11 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end tim
 						CollaboratorID: member.ID,
 					})
 					if err != nil {
-						github.LoadMemberLog(ERROR, err)
+						github.LoadMembersLog(ERROR, err)
 						return err
 					}
 				} else {
-					github.LoadMemberLog(ERROR, err)
+					github.LoadMembersLog(ERROR, err)
 					return err
 				}
 			}
@@ -109,7 +109,7 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end tim
 				OrgMemID: orgMemID,
 			}, start, end)
 			if err != nil {
-				github.LoadMemberLog(ERROR, err)
+				github.LoadMembersLog(ERROR, err)
 				return err
 			}
 		}
@@ -141,27 +141,49 @@ func (github *GithubService) LoadMember(username string) (string, error) {
 		return memID, err
 	}
 
-	memID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
-		ID:              memberQ.User.ID,
-		Login:           memberQ.User.Login,
-		Name:            sql.NullString{String: memberQ.User.Name, Valid: true},
-		Email:           sql.NullString{String: memberQ.User.Email, Valid: true},
-		Url:             sql.NullString{String: memberQ.User.URL, Valid: true},
-		AvatarUrl:       sql.NullString{String: memberQ.User.AvatarURL, Valid: true},
-		WebsiteUrl:      sql.NullString{String: memberQ.User.WebsiteURL, Valid: true},
-		GithubCreatedAt: sql.NullTime{Time: memberQ.User.GithubCreatedAt, Valid: true},
-		GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
-	})
+	memID, err = github.model.GetMemberByLogin(github.ctx, username)
 	if err != nil {
-		github.LoadMemberLog(ERROR, err)
-		return memID, err
+		if err == sql.ErrNoRows {
+			memID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
+				ID:              memberQ.User.ID,
+				Login:           memberQ.User.Login,
+				Name:            sql.NullString{String: memberQ.User.Name, Valid: true},
+				Email:           sql.NullString{String: memberQ.User.Email, Valid: true},
+				Url:             sql.NullString{String: memberQ.User.URL, Valid: true},
+				AvatarUrl:       sql.NullString{String: memberQ.User.AvatarURL, Valid: true},
+				WebsiteUrl:      sql.NullString{String: memberQ.User.WebsiteURL, Valid: true},
+				GithubCreatedAt: sql.NullTime{Time: memberQ.User.GithubCreatedAt, Valid: true},
+				GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
+			})
+			if err != nil {
+				github.LoadMemberLog(ERROR, err)
+				return memID, err
+			}
+		} else {
+			github.LoadMemberLog(ERROR, err)
+			return memID, err
+		}
 	}
 
 	return memID, nil
 }
 
-func (github *GithubService) LoadMemberLog(level string, message interface{}) {
+func (github *GithubService) LoadMembersLog(level string, message interface{}) {
 	const path = "member -> LoadMembers -"
+	switch level {
+	case DEBUG:
+		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))
+	case INFO:
+		github.logger.Info(fmt.Sprintf("%s, %s", path, message))
+	case ERROR:
+		github.logger.Error(path, zap.Error(fmt.Errorf("%s", message)))
+	case WARNING:
+		github.logger.Warn(fmt.Sprintf("%s, %s", path, message))
+	}
+}
+
+func (github *GithubService) LoadMemberLog(level string, message interface{}) {
+	const path = "member -> LoadMember -"
 	switch level {
 	case DEBUG:
 		github.logger.Debug(fmt.Sprintf("%s, %s", path, message))

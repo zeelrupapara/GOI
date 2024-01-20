@@ -26,15 +26,16 @@ type GithubPullRequestQ struct {
 	Author  struct {
 		Login string
 	}
-	URL       string
-	Reviews   GithubReviewsQ   `graphql:"reviews(first: $reviewsLimit, after: $reviewsCursor)"`
-	Labels    GithubLabelsQ    `graphql:"labels(first: $labelsLimit, after: $labelsCursor)"`
-	Commits   GithubCommitsQ   `graphql:"commits(first: $commitsLimit, after: $commitsCursor)"`
-	Assignees GithubAssigneesQ `graphql:"assignees(first: $assigneesLimit, after: $assigneesCursor)"`
-	MergedAt  time.Time
-	ClosedAt  time.Time
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	URL                      string
+	ReviewRequests           GithubReviewRequestsQ           `graphql:"reviewRequests(first: $reviewRequestsLimit, after: $reviewRequestsCursor)"`
+	LatestOpinionatedReviews GithubLatestOpinionatedReviewsQ `graphql:"latestOpinionatedReviews(first: $latestOpinionatedReviewsLimit, after: $latestOpinionatedReviewsCursor)"`
+	Labels                   GithubLabelsQ                   `graphql:"labels(first: $labelsLimit, after: $labelsCursor)"`
+	Commits                  GithubCommitsQ                  `graphql:"commits(first: $commitsLimit, after: $commitsCursor)"`
+	Assignees                GithubAssigneesQ                `graphql:"assignees(first: $assigneesLimit, after: $assigneesCursor)"`
+	MergedAt                 time.Time
+	ClosedAt                 time.Time
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
 }
 
 type GithubReviewQ struct {
@@ -45,6 +46,26 @@ type GithubReviewQ struct {
 	SubmittedAt time.Time
 	Author      struct {
 		Login string
+	}
+}
+
+type GithubLatestOpinionatedReviewQ struct {
+	ID     string
+	Author struct {
+		Login string
+	}
+	State       string
+	SubmittedAt time.Time
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+}
+
+type GithubReviewRequestQ struct {
+	ID                string
+	RequestedReviewer struct {
+		User struct {
+			Login string
+		} `graphql:"... on User"`
 	}
 }
 
@@ -86,6 +107,16 @@ type GithubReviewsQ struct {
 	PageInfo PageInfo
 }
 
+type GithubLatestOpinionatedReviewsQ struct {
+	Nodes    []GithubLatestOpinionatedReviewQ
+	PageInfo PageInfo
+}
+
+type GithubReviewRequestsQ struct {
+	Nodes    []GithubReviewRequestQ
+	PageInfo PageInfo
+}
+
 type GithubLabelsQ struct {
 	Nodes    []GithubLabelQ
 	PageInfo PageInfo
@@ -98,18 +129,19 @@ type GithubCommitsQ struct {
 
 func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArgs, start, end time.Time) error {
 	var noPages []string
-	var ActivityType string = "PR"
 	var contributionsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var contributionsCursor *githubv4.String
 	var memberName githubv4.String = githubv4.String(orgMember.Member.Login)
-	var reviewsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
+	var reviewRequestsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var labelsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var commitsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var assigneesLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
+	var latestOpinionatedReviewsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var assigneesCursor *githubv4.String
 	var commitsCursor *githubv4.String
 	var labelsCursor *githubv4.String
-	var reviewsCursor *githubv4.String
+	var reviewRequestsCursor *githubv4.String
+	var latestOpinionatedReviewsCursor *githubv4.String
 
 	var pullRequestsQ struct {
 		User struct {
@@ -128,20 +160,22 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 	for {
 		// Set the cursor for pagination
 		variables := map[string]interface{}{
-			"labelsLimit":         labelsLimit,
-			"commitsLimit":        commitsLimit,
-			"assigneesLimit":      assigneesLimit,
-			"labelsCursor":        labelsCursor,
-			"commitsCursor":       commitsCursor,
-			"assigneesCursor":     assigneesCursor,
-			"reviewsLimit":        reviewsLimit,
-			"reviewsCursor":       reviewsCursor,
-			"contributionsLimit":  contributionsLimit,
-			"contributionsCursor": contributionsCursor,
-			"startTime":           *githubv4.NewDateTime(githubv4.DateTime{start}),
-			"endTime":             *githubv4.NewDateTime(githubv4.DateTime{end}),
-			"orgID":               orgMember.ID,
-			"memberLogin":         memberName,
+			"labelsLimit":                    labelsLimit,
+			"commitsLimit":                   commitsLimit,
+			"assigneesLimit":                 assigneesLimit,
+			"labelsCursor":                   labelsCursor,
+			"commitsCursor":                  commitsCursor,
+			"assigneesCursor":                assigneesCursor,
+			"reviewRequestsLimit":            reviewRequestsLimit,
+			"reviewRequestsCursor":           reviewRequestsCursor,
+			"latestOpinionatedReviewsLimit":  latestOpinionatedReviewsLimit,
+			"latestOpinionatedReviewsCursor": latestOpinionatedReviewsCursor,
+			"contributionsLimit":             contributionsLimit,
+			"contributionsCursor":            contributionsCursor,
+			"startTime":                      *githubv4.NewDateTime(githubv4.DateTime{start}),
+			"endTime":                        *githubv4.NewDateTime(githubv4.DateTime{end}),
+			"orgID":                          orgMember.ID,
+			"memberLogin":                    memberName,
 		}
 
 		// Execute the graphQL query
@@ -155,10 +189,8 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 		}
 
 		for _, repo := range pullRequestsQ.User.ContributionsCollection.PullRequestContributionsByRepository {
-			github.PRLog(DEBUG, fmt.Sprintf("📦️ Repo:%s", repo.Repository.Name))
-
+			github.PRLog(DEBUG, fmt.Sprintf("📦️ Repo: %s", repo.Repository.Name))
 			var repoMemberID string
-			// Check repo exist or not?
 			repoID, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
 			if err != nil {
 				if err == sql.ErrNoRows {
@@ -249,14 +281,15 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							return err
 						}
 					}
-					// review
-					if len(prContribution.PullRequest.Reviews.Nodes) > 0 {
-						for _, review := range prContribution.PullRequest.Reviews.Nodes {
-							github.PRLog(DEBUG, fmt.Sprintf("👀 Reviewer: %s", review.Author.Login))
-							reviwerID, err := github.model.GetMemberByLogin(github.ctx, review.Author.Login)
+
+					// Review Request
+					if len(prContribution.PullRequest.ReviewRequests.Nodes) > 0 {
+						for _, review := range prContribution.PullRequest.ReviewRequests.Nodes {
+							github.PRLog(DEBUG, fmt.Sprintf("👀 Reviewer: %s", review.RequestedReviewer.User.Login))
+							reviwerID, err := github.model.GetMemberByLogin(github.ctx, review.RequestedReviewer.User.Login)
 							if err != nil {
 								if err == sql.ErrNoRows {
-									reviwerID, err = github.LoadMember(review.Author.Login)
+									reviwerID, err = github.LoadMember(review.RequestedReviewer.User.Login)
 									if err != nil {
 										github.PRLog(ERROR, err)
 										return err
@@ -273,10 +306,10 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ID:                review.ID,
 										ReviewerID:        reviwerID,
 										PrID:              prContribution.PullRequest.ID,
-										Status:            review.State,
-										GithubCreatedAt:   sql.NullTime{Time: review.CreatedAt, Valid: true},
-										GithubUpdatedAt:   sql.NullTime{Time: review.UpdatedAt, Valid: true},
-										GithubSubmittedAt: sql.NullTime{Time: review.SubmittedAt, Valid: true},
+										Status:            constants.ReviewRequestInitState,
+										GithubCreatedAt:   sql.NullTime{Time: prContribution.PullRequest.CreatedAt, Valid: true},
+										GithubUpdatedAt:   sql.NullTime{Time: prContribution.PullRequest.CreatedAt, Valid: true},
+										GithubSubmittedAt: sql.NullTime{Time: prContribution.PullRequest.CreatedAt, Valid: true},
 									})
 								} else {
 									github.PRLog(ERROR, err)
@@ -286,7 +319,66 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						}
 					}
 
-					// labal
+					// Latest Opinionated Review
+					if len(prContribution.PullRequest.LatestOpinionatedReviews.Nodes) > 0 {
+						for _, latestOpinionatedReview := range prContribution.PullRequest.LatestOpinionatedReviews.Nodes {
+							github.PRLog(DEBUG, fmt.Sprintf("✍️ State: %s, 👀 Reviewer: %s", latestOpinionatedReview.State, latestOpinionatedReview.Author.Login))
+							reviewerID, err := github.model.GetMemberByLogin(github.ctx, latestOpinionatedReview.Author.Login)
+							if err != nil {
+								if err == sql.ErrNoRows {
+									reviewerID, err = github.LoadMember(latestOpinionatedReview.Author.Login)
+									if err != nil {
+										github.PRLog(ERROR, err)
+										return err
+									}
+								} else {
+									github.PRLog(ERROR, err)
+									return err
+								}
+							}
+
+							reviewID, err := github.model.GetReviewByPRAndReviewerID(github.ctx, models.GetReviewByPRAndReviewerIDParams{
+								PrID:       prContribution.PullRequest.ID,
+								ReviewerID: reviewerID,
+							})
+							if err != nil {
+								if err == sql.ErrNoRows {
+									_, err = github.model.InsertReview(github.ctx, models.InsertReviewParams{
+										ID:                latestOpinionatedReview.ID,
+										ReviewerID:        reviewerID,
+										PrID:              prContribution.PullRequest.ID,
+										Status:            latestOpinionatedReview.State,
+										GithubCreatedAt:   sql.NullTime{Time: latestOpinionatedReview.CreatedAt, Valid: true},
+										GithubUpdatedAt:   sql.NullTime{Time: latestOpinionatedReview.UpdatedAt, Valid: true},
+										GithubSubmittedAt: sql.NullTime{Time: latestOpinionatedReview.SubmittedAt, Valid: true},
+									})
+									if err != nil {
+										github.PRLog(ERROR, err)
+										return err
+									}
+									continue
+								} else {
+									github.PRLog(ERROR, err)
+									return err
+								}
+							}
+							_, err = github.model.UpdateReview(github.ctx, models.UpdateReviewParams{
+								ID:                reviewID,
+								ReviewerID:        reviewerID,
+								PrID:              prContribution.PullRequest.ID,
+								Status:            latestOpinionatedReview.State,
+								GithubCreatedAt:   sql.NullTime{Time: latestOpinionatedReview.CreatedAt, Valid: true},
+								GithubUpdatedAt:   sql.NullTime{Time: latestOpinionatedReview.UpdatedAt, Valid: true},
+								GithubSubmittedAt: sql.NullTime{Time: latestOpinionatedReview.SubmittedAt, Valid: true},
+							})
+							if err != nil {
+								github.PRLog(ERROR, err)
+								return err
+							}
+						}
+					}
+
+					// Labal
 					if len(prContribution.PullRequest.Labels.Nodes) > 0 {
 						for _, labal := range prContribution.PullRequest.Labels.Nodes {
 							github.PRLog(DEBUG, fmt.Sprintf("🪧 Labal: %s", labal.Name))
@@ -318,7 +410,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ID:           utils.GenerateUUID(),
 										LabalID:      labalID,
 										PrID:         sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
-										ActivityType: ActivityType,
+										ActivityType: constants.ActivityPR,
 									})
 									if err != nil {
 										github.PRLog(ERROR, err)
@@ -332,7 +424,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						}
 					}
 
-					// assignee
+					// Assignee
 					if len(prContribution.PullRequest.Assignees.Nodes) > 0 {
 						for _, assignee := range prContribution.PullRequest.Assignees.Nodes {
 							github.PRLog(DEBUG, fmt.Sprintf("🧑‍💻 Assginee: %s", assignee.Login))
@@ -359,7 +451,7 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										ID:             utils.GenerateUUID(),
 										CollaboratorID: memID,
 										PrID:           sql.NullString{String: prID, Valid: true},
-										ActivityType:   ActivityType,
+										ActivityType:   constants.ActivityPR,
 									})
 									if err != nil {
 										github.PRLog(ERROR, err)
@@ -373,9 +465,10 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						}
 					}
 
-					// commits
 					if len(prContribution.PullRequest.Commits.Nodes) > 0 {
 						github.PRLog(DEBUG, fmt.Sprintf("🌳 Branch: %s", prContribution.PullRequest.Branch))
+
+						// Branch
 						branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
 							Name:         prContribution.PullRequest.Branch,
 							RepositoryID: repo.Repository.ID,
@@ -396,6 +489,8 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 								return err
 							}
 						}
+
+						// Commits
 						for _, commit := range prContribution.PullRequest.Commits.Nodes {
 							github.PRLog(DEBUG, fmt.Sprintf("💬 Commit: %s", commit.Commit.Message))
 							github.PRLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", commit.Commit.Author.User.Login))
@@ -424,9 +519,9 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 										BranchID:            branchID,
 										AuthorID:            committerID,
 										PrID:                sql.NullString{String: prContribution.PullRequest.ID, Valid: true},
-										Url:                 sql.NullString{String: commit.Commit.URL},
-										CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl},
-										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate},
+										Url:                 sql.NullString{String: commit.Commit.URL, Valid: true},
+										CommitUrl:           sql.NullString{String: commit.Commit.CommitUrl, Valid: true},
+										GithubCommittedTime: sql.NullTime{Time: commit.Commit.CommittedDate, Valid: true},
 									})
 								} else {
 									github.PRLog(ERROR, err)
@@ -436,14 +531,23 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 						}
 					}
 
-					// reviews page break
-					if !prContribution.PullRequest.Reviews.PageInfo.HasNextPage {
-						if !utils.Contains("Review", noPages) {
-							noPages = append(noPages, "Review")
-							reviewsLimit = githubv4.Int(0)
+					// reviewRequested page break
+					if !prContribution.PullRequest.ReviewRequests.PageInfo.HasNextPage {
+						if !utils.Contains("ReviewRequests", noPages) {
+							noPages = append(noPages, "ReviewRequests")
+							reviewRequestsLimit = githubv4.Int(0)
 						}
 					}
-					reviewsCursor = &prContribution.PullRequest.Reviews.PageInfo.EndCursor
+					reviewRequestsCursor = &prContribution.PullRequest.ReviewRequests.PageInfo.EndCursor
+
+					// latest opinionated review page break
+					if !prContribution.PullRequest.ReviewRequests.PageInfo.HasNextPage {
+						if !utils.Contains("LatestOpinionatedReviews", noPages) {
+							noPages = append(noPages, "LatestOpinionatedReviews")
+							latestOpinionatedReviewsLimit = githubv4.Int(0)
+						}
+					}
+					latestOpinionatedReviewsCursor = &prContribution.PullRequest.ReviewRequests.PageInfo.EndCursor
 
 					// assignees page break
 					if !prContribution.PullRequest.Assignees.PageInfo.HasNextPage {
@@ -472,18 +576,40 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 					}
 					labelsCursor = &prContribution.PullRequest.Labels.PageInfo.EndCursor
 				}
-			}
+				// pullrequest contribution page break
+				if (!repo.Contributions.PageInfo.HasNextPage) && len(noPages) == 5 {
+					if !utils.Contains("PullRequest", noPages) {
+						noPages = append(noPages, "PullRequest")
+						contributionsLimit = githubv4.Int(0)
+					}
+				}
+				if repo.Contributions.PageInfo.HasNextPage && len(noPages) == 5 {
+					contributionsCursor = &repo.Contributions.PageInfo.EndCursor
+				}
+				if len(noPages) == 5 {
+					// ReviewRequests Reset
+					reviewRequestsLimit = githubv4.Int(constants.DefaultLimit)
+					reviewRequestsCursor = nil
 
-			// pullrequest contribution page break
-			if !repo.Contributions.PageInfo.HasNextPage {
-				if !utils.Contains("PullRequest", noPages) {
-					noPages = append(noPages, "PullRequest")
-					contributionsLimit = githubv4.Int(0)
+					// LatestOpinionatedReviews Reset
+					latestOpinionatedReviewsLimit = githubv4.Int(constants.DefaultLimit)
+					latestOpinionatedReviewsCursor = nil
+
+					// Commit Reset
+					commitsLimit = githubv4.Int(constants.DefaultLimit)
+					commitsCursor = nil
+
+					// Assaignee Reset
+					assigneesCursor = nil
+					assigneesLimit = githubv4.Int(constants.DefaultLimit)
+
+					// Label Reset
+					labelsCursor = nil
+					labelsLimit = githubv4.Int(constants.DefaultLimit)
 				}
 			}
-			contributionsCursor = &repo.Contributions.PageInfo.EndCursor
 		}
-		if (len(noPages)) == 5 {
+		if (len(noPages)) == 6 {
 			break
 		}
 	}
