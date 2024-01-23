@@ -24,6 +24,7 @@ To interact with the Github API, you'll need to set up a personal access token. 
 Now, create a `.env` file in the project directory and add the token:
 
 ```bash
+cd api
 echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> .env.example
 cp .env.example .env
 ```

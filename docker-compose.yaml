@@ -1,16 +1,69 @@
 version: '3.9'
 
 services:
-  postgres:
+  db:
     image: postgres:14-alpine
     ports:
       - 5432:5432
     volumes:
       - postg_vol:/var/lib/postgresql/data
     environment:
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=GPAT
+  
+  # migration:
+  #   build:
+  #     context: ./api/
+  #   restart: on-failure
+  #   depends_on:
+  #     - db
+  #   env_file:
+  #     - ./api/.env.docker
+  #   entrypoint: [ /bin/sh ]
+  #   command:
+  #     - -c
+  #     - /app/GPAT migrate up
+
+  api:
+    image: cosmtrek/air
+    ports:
+      - 8000:8000
+    volumes:
+      - ./api/:/go/src/app/:ro
+    environment:
+      - air_wd=/go/src/app/
+    command: |
+      -c /go/src/app/air.toml
+    depends_on:
+      - db
+      # - migration
+
+  web:
+    build:
+      context: ./web/
+    restart: on-failure
+    depends_on:
+      - api
+    env_file:
+      - ./web/.env.docker
+    volumes:
+      - ./web/:/usr/src/app
+    ports:
+      - 3000:3000
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./logs:/var/log/nginx/:rw
+    depends_on:
+      - api
+      - web
+    restart: on-failure
+
 
 volumes:
   postg_vol:
