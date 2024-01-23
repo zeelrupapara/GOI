@@ -33,6 +33,8 @@ services:
       - ./api/:/go/src/app/:ro
     environment:
       - air_wd=/go/src/app/
+    env_file:
+      - ./api/.env.docker
     command: |
       -c /go/src/app/air.toml
     depends_on:
