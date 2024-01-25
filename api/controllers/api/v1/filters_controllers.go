@@ -2,7 +2,6 @@ package v1
 
 import (
 	"database/sql"
-	"time"
 
 	"github.com/Improwised/GPAT/constants"
 	"github.com/Improwised/GPAT/models"
@@ -11,32 +10,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type OrganizationControllers struct {
+type FiltersControllers struct {
 	model *models.Queries
 }
 
-type Organization struct {
-	ID              string    `json:"id"`
-	Login           string    `json:"login"`
-	Name            string    `json:"name"`
-	Email           string    `json:"email"`
-	Location        string    `json:"location"`
-	Description     string    `json:"description"`
-	Url             string    `json:"url"`
-	AvatarUrl       string    `json:"avatar_url"`
-	WebsiteUrl      string    `json:"website_url"`
-	GithubUpdatedAt time.Time `json:"github_updated_at"`
-	GithubCreatedAt time.Time `json:"github_created_at"`
-}
-
-func NewOrganizationController(db *sql.DB, logger *zap.Logger) (*OrganizationControllers, error) {
-	orgModel := models.New(db)
-	return &OrganizationControllers{
-		model: orgModel,
+func NewFiltersController(db *sql.DB, logger *zap.Logger) (*FiltersControllers, error) {
+	filtersModel := models.New(db)
+	return &FiltersControllers{
+		model: filtersModel,
 	}, nil
 }
 
-func (ctrl *OrganizationControllers) GetOrganizations(c *fiber.Ctx) error {
+func (ctrl *FiltersControllers) GetOrganizationFilterOptions(c *fiber.Ctx) error {
 	var orgs []Organization
 	organizations, err := ctrl.model.GetOrganizationList(c.Context())
 	for _, organization := range organizations {
@@ -55,7 +40,8 @@ func (ctrl *OrganizationControllers) GetOrganizations(c *fiber.Ctx) error {
 		})
 	}
 	if err != nil {
-		return utils.JSONError(c, 400, constants.ErrGetOrganizations)
+		return utils.JSONError(c, 400, constants.ErrGetFilterOrganization)
 	}
 	return utils.JSONSuccess(c, 200, orgs)
 }
+

@@ -24,4 +24,6 @@ const ()
 // Error messages
 const (
 	ErrGetOrganizations = "Unable to get organization list"
+	ErrGetFilterOrganization = "Unable to get organization filter options"
+
 )
