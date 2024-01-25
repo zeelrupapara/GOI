@@ -19,3 +19,6 @@ go.work
 
 # ENV
 .env
+
+# AIR temp folder (hot reload)
+tmp/*

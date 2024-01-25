@@ -37,3 +37,17 @@ WHERE repositories.id = $1;
 
 -- name: GetRepoDetailsByID :one
 select * from repositories where id = $1;
+
+-- name: GetRepositories :many
+SELECT DISTINCT
+    repositories.id AS repo_id,
+    repositories.name AS repo_name,
+    organizations.login AS org_login
+FROM
+    repositories
+JOIN
+    repository_collaborators ON repositories.id = repository_collaborators.repo_id
+JOIN
+    organization_collaborators ON repository_collaborators.organization_collaborator_id = organization_collaborators.id
+JOIN
+    organizations ON organization_collaborators.organization_id = organizations.id ORDER BY repositories.name;

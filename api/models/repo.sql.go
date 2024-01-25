@@ -50,6 +50,50 @@ func (q *Queries) GetRepoDetailsByID(ctx context.Context, id string) (Repository
 	return i, err
 }
 
+const getRepositories = `-- name: GetRepositories :many
+SELECT DISTINCT
+    repositories.id AS repo_id,
+    repositories.name AS repo_name,
+    organizations.login AS org_login
+FROM
+    repositories
+JOIN
+    repository_collaborators ON repositories.id = repository_collaborators.repo_id
+JOIN
+    organization_collaborators ON repository_collaborators.organization_collaborator_id = organization_collaborators.id
+JOIN
+    organizations ON organization_collaborators.organization_id = organizations.id ORDER BY repositories.name
+`
+
+type GetRepositoriesRow struct {
+	RepoID   string         `json:"repo_id"`
+	RepoName sql.NullString `json:"repo_name"`
+	OrgLogin string         `json:"org_login"`
+}
+
+func (q *Queries) GetRepositories(ctx context.Context) ([]GetRepositoriesRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRepositories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRepositoriesRow
+	for rows.Next() {
+		var i GetRepositoriesRow
+		if err := rows.Scan(&i.RepoID, &i.RepoName, &i.OrgLogin); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertRepo = `-- name: InsertRepo :one
 INSERT INTO
     "repositories" (

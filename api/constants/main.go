@@ -26,4 +26,5 @@ const (
 	ErrGetOrganizations = "Unable to get organization list"
 	ErrGetFilterOrganization = "Unable to get organization filter options"
 	ErrGetFilterMembers = "Unable to get member filter options"
+	ErrGetRepositoryMembers = "Unable to get repository filter options"
 )
