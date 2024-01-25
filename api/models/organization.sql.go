@@ -23,13 +23,14 @@ func (q *Queries) GetOrganizationByLogin(ctx context.Context, login string) (str
 	return id, err
 }
 
-const getOrganizationList = `-- name: GetOrganizationList :many
+const getOrganizations = `-- name: GetOrganizations :many
 SELECT id, login, name, email, location, description, url, avatar_url, website_url, github_updated_at, github_created_at, created_at, updated_at, deleted_at
 FROM "organizations"
+ORDER BY organizations.login
 `
 
-func (q *Queries) GetOrganizationList(ctx context.Context) ([]Organization, error) {
-	rows, err := q.db.QueryContext(ctx, getOrganizationList)
+func (q *Queries) GetOrganizations(ctx context.Context) ([]Organization, error) {
+	rows, err := q.db.QueryContext(ctx, getOrganizations)
 	if err != nil {
 		return nil, err
 	}

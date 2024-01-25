@@ -16,3 +16,9 @@ RETURNING collaborators.id;
 SELECT collaborators.id
 FROM "collaborators"
 WHERE collaborators.login = $1;
+
+
+-- name: GetMembers :many
+SELECT * 
+FROM "collaborators" 
+ORDER BY collaborators.login;

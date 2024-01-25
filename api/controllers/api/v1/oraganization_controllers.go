@@ -38,7 +38,7 @@ func NewOrganizationController(db *sql.DB, logger *zap.Logger) (*OrganizationCon
 
 func (ctrl *OrganizationControllers) GetOrganizations(c *fiber.Ctx) error {
 	var orgs []Organization
-	organizations, err := ctrl.model.GetOrganizationList(c.Context())
+	organizations, err := ctrl.model.GetOrganizations(c.Context())
 	for _, organization := range organizations {
 		orgs = append(orgs, Organization{
 			ID:              organization.ID,

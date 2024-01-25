@@ -64,5 +64,6 @@ func setupFiltersController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, mid
 	}
 	filtersRouter := v1.Group("/filters")
 	filtersRouter.Get("/organization", filtersController.GetOrganizationFilterOptions)
+	filtersRouter.Get("/member", filtersController.GetMemberFilterOptions)
 	return nil
 }

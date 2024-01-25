@@ -1,6 +1,8 @@
--- name: GetOrganizationList :many
+-- name: GetOrganizations :many
 SELECT *
-FROM "organizations";
+FROM "organizations"
+ORDER BY organizations.login;
+
 -- name: InsertOrganization :one
 INSERT INTO "organizations" (
         "id",
@@ -17,6 +19,7 @@ INSERT INTO "organizations" (
     )
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 RETURNING organizations.id;
+
 -- name: GetOrganizationByLogin :one
 SELECT organizations.id
 FROM "organizations"

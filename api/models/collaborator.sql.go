@@ -23,6 +23,48 @@ func (q *Queries) GetMemberByLogin(ctx context.Context, login string) (string, e
 	return id, err
 }
 
+const getMembers = `-- name: GetMembers :many
+SELECT id, login, name, email, url, avatar_url, website_url, github_created_at, github_updated_at, created_at, updated_at, deleted_at 
+FROM "collaborators" 
+ORDER BY collaborators.login
+`
+
+func (q *Queries) GetMembers(ctx context.Context) ([]Collaborator, error) {
+	rows, err := q.db.QueryContext(ctx, getMembers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Collaborator
+	for rows.Next() {
+		var i Collaborator
+		if err := rows.Scan(
+			&i.ID,
+			&i.Login,
+			&i.Name,
+			&i.Email,
+			&i.Url,
+			&i.AvatarUrl,
+			&i.WebsiteUrl,
+			&i.GithubCreatedAt,
+			&i.GithubUpdatedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DeletedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertMember = `-- name: InsertMember :one
 INSERT INTO "collaborators" (
         "id",
