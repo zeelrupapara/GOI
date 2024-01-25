@@ -1,4 +1,7 @@
+// const CompressionPlugin = require("compression-webpack-plugin");
+
 export default {
+  loading: "~/components/Loading.vue",
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'web',
@@ -11,16 +14,21 @@ export default {
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
   },
 
-  server:{
+  server: {
     host: "0.0.0.0",
     port: process.env.PORT
   },
 
   // Global CSS: https://go.nuxtjs.dev/config-css
-  css: [],
+  css: [
+    "~/assets/scss/app.scss"
+  ],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: [],
+  plugins: [
+    "~/plugins/constants.js",
+    "~/plugins/axios.js"
+  ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -57,5 +65,19 @@ export default {
   content: {},
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
-  build: {},
+  build: {
+    // splitChunks: {
+    //   layouts: true,
+    //   pages: true,
+    //   commons: true
+    // },
+
+    // extractCSS: {
+    //   ignoreOrder: true
+    // },
+
+    // cssSourceMap: true,
+
+    // plugins: [new CompressionPlugin()]
+  },
 }
