@@ -16,9 +16,9 @@ type FiltersControllers struct {
 }
 
 type Organization struct {
-	ID          string `json:"id"`
-	Login       string `json:"login"`
-	Name        string `json:"name,omitempty"`
+	ID          string `json:"key"`
+	Login       string `json:"name"`
+	Name        string `json:"full_name,omitempty"`
 	Email       string `json:"email,omitempty"`
 	Location    string `json:"location,omitempty"`
 	Description string `json:"description,omitempty"`
@@ -28,9 +28,9 @@ type Organization struct {
 }
 
 type Member struct {
-	ID         string `json:"id"`
-	Login      string `json:"login"`
-	Name       string `json:"name,omitempty"`
+	ID         string `json:"key"`
+	Login      string `json:"name"`
+	Name       string `json:"full_name,omitempty"`
 	Email      string `json:"email,omitempty"`
 	Url        string `json:"url,omitempty"`
 	AvatarUrl  string `json:"avatar_url,omitempty"`
@@ -38,7 +38,7 @@ type Member struct {
 }
 
 type Repository struct {
-	ID            string `json:"id"`
+	ID            string `json:"key"`
 	Name          string `json:"name"`
 	IsPrivate     bool   `json:"is_private,omitempty"`
 	DefaultBranch string `json:"default_branch,omitempty"`
@@ -58,6 +58,7 @@ func NewFiltersController(db *sql.DB, logger *zap.Logger) (*FiltersControllers, 
 	}, nil
 }
 
+// Get organization filter option
 func (ctrl *FiltersControllers) GetOrganizationFilterOptions(c *fiber.Ctx) error {
 	var organizations []Organization
 	orgs, err := ctrl.model.GetOrganizations(c.Context())
@@ -73,6 +74,7 @@ func (ctrl *FiltersControllers) GetOrganizationFilterOptions(c *fiber.Ctx) error
 	return utils.JSONSuccess(c, 200, organizations)
 }
 
+// Get member filter option
 func (ctrl *FiltersControllers) GetMemberFilterOptions(c *fiber.Ctx) error {
 	var members []Member
 	membs, err := ctrl.model.GetMembers(c.Context())
@@ -88,6 +90,7 @@ func (ctrl *FiltersControllers) GetMemberFilterOptions(c *fiber.Ctx) error {
 	return utils.JSONSuccess(c, 200, members)
 }
 
+// Get repository filter option
 func (ctrl *FiltersControllers) GetRepositoryFilterOptions(c *fiber.Ctx) error {
 	var repositoies []Repository
 	repos, err := ctrl.model.GetRepositories(c.Context())

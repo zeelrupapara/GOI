@@ -1,7 +1,7 @@
 <script>
 import DatePicker from 'vue2-datepicker';
 import 'vue2-datepicker/index.css';
-
+import utils from "@/utils/utils.js";
 export default {
   components: {
     DatePicker

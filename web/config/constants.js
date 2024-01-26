@@ -1,6 +1,22 @@
 const CONSTANTS = {
   API_URL_PREFIX: "/api/v1",
   PRODUCT_NAME: "GPAT",
+
+  // Filters
+  FILTERS: {
+
+    // placeholders
+    ORG_PLACEHOLDER: "Select Organizations",
+    REPO_PLACEHOLDER: "Select Repositories",
+    MEMBER_PLACEHOLDER: "Select Members",
+    DATETIME_PLACEOLDER: "Select Date Range",
+
+    // queryparams (qp) filter keys
+    ORG_QP: "orgs",
+    REPO_QP: "repo",
+    MEMBER_QP: "membs",
+
+  },
   STATUS_CODES: {
     100: "Continue",
     101: "Switching Protocols",
