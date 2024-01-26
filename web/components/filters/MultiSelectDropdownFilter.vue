@@ -7,7 +7,7 @@ export default {
   props: {
     options: {
       type: Array,
-      default: []
+      default: () => { return [] }
     },
     placeholder: {
       type: String,
@@ -16,18 +16,31 @@ export default {
     query: {
       type: String,
       default: null
+    },
+    selectedOptions: {
+      type: Array,
+      default: () => { return [] }
     }
   },
-  data() {
-    return {
-      values: null
+  watch: {
+    "$route.query":{
+      handler(newValue){
+        if(Object.keys(newValue).length === 0){
+          this.value = null
+        }
+      }
+    }
+  },
+  data(){
+    return{
+      value: this.selectedOptions
     }
   },
   methods: {
     applyFilter() {
       // get currunt query params
       const queryParams = { ...this.$route.query };
-      const valuesKey = this.values.map(value => value.key)
+      const valuesKey = this.value.map(value => value.key)
 
       // set filters wise query params
       switch (this.query) {
@@ -62,7 +75,7 @@ export default {
 }
 </script>
 <template>
-  <multiselect @input="applyFilter" style="font-size: 0.8rem;" v-model="values" label="name" track-by="name"
+  <multiselect @input="applyFilter" style="font-size: 0.8rem;" v-model="value" label="name" track-by="name"
     :options="options" :placeholder="placeholder" :multiple="true" />
 </template>
 
