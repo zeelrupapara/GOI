@@ -37,6 +37,10 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 		return err
 	}
 
+	err = setupMatrixController(v1, db, logger, middlewares)
+	if err != nil {
+		return err
+	}
 	mu.Unlock()
 	return nil
 }
@@ -50,5 +54,15 @@ func setupFiltersController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, mid
 	filtersRouter.Get("/organization", filtersController.GetOrganizationFilterOptions)
 	filtersRouter.Get("/member", filtersController.GetMemberFilterOptions)
 	filtersRouter.Get("/repository", filtersController.GetRepositoryFilterOptions)
+	return nil
+}
+
+func setupMatrixController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	matrixController, err := controller.NewMatrixController(db, logger)
+	if err != nil {
+		return err
+	}
+	matrixRouter := v1.Group("/matrics")
+	matrixRouter.Get("/", matrixController.GetMatrics)
 	return nil
 }

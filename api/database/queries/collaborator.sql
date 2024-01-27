@@ -22,3 +22,8 @@ WHERE collaborators.login = $1;
 SELECT * 
 FROM "collaborators" 
 ORDER BY collaborators.login;
+
+-- name: GetMemberIDs :many
+SELECT DISTINCT
+    collaborators.id
+FROM "collaborators";

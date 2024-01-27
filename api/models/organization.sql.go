@@ -10,6 +10,53 @@ import (
 	"database/sql"
 )
 
+const getOrganizationByFilter = `-- name: GetOrganizationByFilter :one
+SELECT
+    COUNT(DISTINCT org.id) AS organization_count
+FROM
+    public.organizations org
+FULL JOIN
+    public.organization_collaborators oc ON org.id = oc.organization_id
+FULL JOIN
+    public.collaborators coll ON oc.collaborator_id = coll.id
+FULL JOIN
+    public.repository_collaborators rc ON oc.id = rc.organization_collaborator_id
+FULL JOIN
+    public.repositories r ON rc.repo_id = r.id
+FULL JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+FULL JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+FULL JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+WHERE
+	(i.github_updated_at BETWEEN $1 AND $2 OR pr.github_updated_at BETWEEN $1 AND $2)
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+`
+
+type GetOrganizationByFilterParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+func (q *Queries) GetOrganizationByFilter(ctx context.Context, arg GetOrganizationByFilterParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getOrganizationByFilter,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	var organization_count int64
+	err := row.Scan(&organization_count)
+	return organization_count, err
+}
+
 const getOrganizationByLogin = `-- name: GetOrganizationByLogin :one
 SELECT organizations.id
 FROM "organizations"
@@ -21,6 +68,36 @@ func (q *Queries) GetOrganizationByLogin(ctx context.Context, login string) (str
 	var id string
 	err := row.Scan(&id)
 	return id, err
+}
+
+const getOrganizationIDs = `-- name: GetOrganizationIDs :many
+SELECT DISTINCT
+    organizations.id
+FROM
+    "organizations"
+`
+
+func (q *Queries) GetOrganizationIDs(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getOrganizationIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getOrganizations = `-- name: GetOrganizations :many

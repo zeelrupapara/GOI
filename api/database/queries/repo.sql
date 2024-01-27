@@ -51,3 +51,34 @@ JOIN
     organization_collaborators ON repository_collaborators.organization_collaborator_id = organization_collaborators.id
 JOIN
     organizations ON organization_collaborators.organization_id = organizations.id ORDER BY repositories.name;
+
+-- name: GetRepoCountByFilters :one
+SELECT 
+	COUNT(DISTINCT  r.id)
+FROM
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+RIGHT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    (i.github_updated_at  BETWEEN $1 AND $2 OR pr.github_updated_at between  $1 AND $2)
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND rc.repo_id = ANY(string_to_array($5, ','));
+
+-- name: GetRepoIDs :many
+SELECT DISTINCT
+    repositories.id
+FROM
+    "repositories";

@@ -22,6 +22,53 @@ func (q *Queries) GetRepoByID(ctx context.Context, id string) (string, error) {
 	return id, err
 }
 
+const getRepoCountByFilters = `-- name: GetRepoCountByFilters :one
+SELECT 
+	COUNT(DISTINCT  r.id)
+FROM
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+RIGHT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    (i.github_updated_at  BETWEEN $1 AND $2 OR pr.github_updated_at between  $1 AND $2)
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND rc.repo_id = ANY(string_to_array($5, ','))
+`
+
+type GetRepoCountByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+func (q *Queries) GetRepoCountByFilters(ctx context.Context, arg GetRepoCountByFiltersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getRepoCountByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const getRepoDetailsByID = `-- name: GetRepoDetailsByID :one
 select id, name, is_private, default_branch, url, homepage_url, open_issues, closed_issues, open_prs, closed_prs, merged_prs, github_created_at, github_updated_at, created_at, updated_at, deleted_at from repositories where id = $1
 `
@@ -48,6 +95,36 @@ func (q *Queries) GetRepoDetailsByID(ctx context.Context, id string) (Repository
 		&i.DeletedAt,
 	)
 	return i, err
+}
+
+const getRepoIDs = `-- name: GetRepoIDs :many
+SELECT DISTINCT
+    repositories.id
+FROM
+    "repositories"
+`
+
+func (q *Queries) GetRepoIDs(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getRepoIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getRepositories = `-- name: GetRepositories :many

@@ -23,6 +23,35 @@ func (q *Queries) GetMemberByLogin(ctx context.Context, login string) (string, e
 	return id, err
 }
 
+const getMemberIDs = `-- name: GetMemberIDs :many
+SELECT DISTINCT
+    collaborators.id
+FROM "collaborators"
+`
+
+func (q *Queries) GetMemberIDs(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, getMemberIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getMembers = `-- name: GetMembers :many
 SELECT id, login, name, email, url, avatar_url, website_url, github_created_at, github_updated_at, created_at, updated_at, deleted_at 
 FROM "collaborators" 

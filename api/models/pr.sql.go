@@ -22,6 +22,51 @@ func (q *Queries) GetPRByID(ctx context.Context, id string) (string, error) {
 	return id, err
 }
 
+const getPRCountByFilters = `-- name: GetPRCountByFilters :one
+SELECT
+   	COUNT(DISTINCT pr.id)
+FROM
+    public.pull_requests pr
+JOIN
+    public.repository_collaborators rc ON pr.repository_collaborators_id = rc.id
+JOIN
+    public.repositories r ON rc.repo_id = r.id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+JOIN
+    public.assignees a ON pr.id = a.pr_id
+LEFT JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    pr.github_updated_at BETWEEN $1 AND $2 
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+`
+
+type GetPRCountByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+func (q *Queries) GetPRCountByFilters(ctx context.Context, arg GetPRCountByFiltersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getPRCountByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const insertPR = `-- name: InsertPR :one
 INSERT INTO
     "pull_requests" (

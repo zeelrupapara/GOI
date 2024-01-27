@@ -69,7 +69,7 @@ func (ctrl *FiltersControllers) GetOrganizationFilterOptions(c *fiber.Ctx) error
 		})
 	}
 	if err != nil {
-		return utils.JSONError(c, 400, constants.ErrGetFilterOrganization)
+		return utils.JSONError(c, 400, constants.ErrGetOrganizationFilter)
 	}
 	return utils.JSONSuccess(c, 200, organizations)
 }
@@ -85,7 +85,7 @@ func (ctrl *FiltersControllers) GetMemberFilterOptions(c *fiber.Ctx) error {
 		})
 	}
 	if err != nil {
-		return utils.JSONError(c, 400, constants.ErrGetFilterMembers)
+		return utils.JSONError(c, 400, constants.ErrGetMemberFilter)
 	}
 	return utils.JSONSuccess(c, 200, members)
 }
@@ -102,7 +102,7 @@ func (ctrl *FiltersControllers) GetRepositoryFilterOptions(c *fiber.Ctx) error {
 		})
 	}
 	if err != nil {
-		return utils.JSONError(c, 400, constants.ErrGetRepositoryMembers)
+		return utils.JSONError(c, 400, constants.ErrGetRepositoryFilter)
 	}
 	return utils.JSONSuccess(c, 200, repositoies)
 }
