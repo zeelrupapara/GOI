@@ -25,15 +25,15 @@ SELECT
     COUNT(DISTINCT i.id) AS issue_count
 FROM
     public.issues i
-JOIN
+FULL JOIN
     public.repository_collaborators rc ON i.repository_collaborators_id = rc.id
-JOIN
+FULL JOIN
     public.repositories r ON rc.repo_id = r.id
-JOIN
+FULL JOIN
     public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
-JOIN
+FULL JOIN
     public.organizations org ON oc.organization_id = org.id
-JOIN
+FULL JOIN
     public.assignees a ON i.id = a.issue_id
 WHERE
     i.github_updated_at BETWEEN $1 AND $2

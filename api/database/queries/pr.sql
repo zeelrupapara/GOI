@@ -40,17 +40,17 @@ SELECT
    	COUNT(DISTINCT pr.id)
 FROM
     public.pull_requests pr
-JOIN
+FULL JOIN
     public.repository_collaborators rc ON pr.repository_collaborators_id = rc.id
-JOIN
+FULL JOIN
     public.repositories r ON rc.repo_id = r.id
-JOIN
+FULL JOIN
     public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
-JOIN
+FULL JOIN
     public.organizations org ON oc.organization_id = org.id
-JOIN
+FULL JOIN
     public.assignees a ON pr.id = a.pr_id
-LEFT JOIN
+FULL JOIN
     public.collaborators coll ON a.collaborator_id = coll.id
 WHERE
     pr.github_updated_at BETWEEN $1 AND $2 

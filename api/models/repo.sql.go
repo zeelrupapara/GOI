@@ -27,19 +27,19 @@ SELECT
 	COUNT(DISTINCT  r.id)
 FROM
     public.repositories r
-JOIN
+FULL JOIN
     public.repository_collaborators rc ON r.id = rc.repo_id
-JOIN
+FULL JOIN
     public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
-JOIN
+FULL JOIN
     public.organizations org ON oc.organization_id = org.id
-RIGHT JOIN
+FULL JOIN
     public.issues i ON rc.id = i.repository_collaborators_id
-LEFT JOIN
+FULL JOIN
     public.pull_requests pr ON rc.id = pr.repository_collaborators_id
-JOIN
+FULL JOIN
     public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
-JOIN
+FULL JOIN
     public.collaborators coll ON a.collaborator_id = coll.id
 WHERE
     (i.github_updated_at  BETWEEN $1 AND $2 OR pr.github_updated_at between  $1 AND $2)
