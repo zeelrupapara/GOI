@@ -20,8 +20,8 @@ type MatrixControllers struct {
 }
 
 type Matrix struct {
-	Title string
-	Count int64
+	Title string `json:"title"`
+	Count int64  `json:"count"`
 }
 
 func NewMatrixController(db *sql.DB, logger *zap.Logger) (*MatrixControllers, error) {
