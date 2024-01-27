@@ -1,7 +1,7 @@
 <template>
   <div class="mt-3">
-      <VueDraggable v-model="list" animation="150" ghostClass="ghost" class="row">
-        <b-col v-for="matrix in matricsData" :key="matrix.id" class="col-md-6 col-xl-3">
+      <VueDraggable v-if="matricsData.length > 0" class="row">
+        <b-col v-for="(matrix, index) in matricsData" :key="index" class="col-md-6 col-xl-3">
           <CountWidget :count="matrix.count" :title="matrix.title" />
         </b-col>
       </VueDraggable>
@@ -17,28 +17,30 @@ export default {
   },
   data() {
     return {
-      matricsData: [
-        {
-          id: 1,
-          title: "PRs",
-          count: 100,
-        },
-        {
-          id: 2,
-          title: "Issues",
-          count: 20
-        },
-        {
-          id: 3,
-          title: "Repositories",
-          count: 2
-        },
-        {
-          id: 4,
-          title: "Organizations",
-          count: 1
-        }
-      ]
+      matricsData: []
+    }
+  },
+  watch:{
+    "$route.query":{
+      handler(){
+        this.getMetrixData()
+      }
+    }
+  },
+  async mounted() {
+    await this.getMetrixData()
+  },
+  methods:{
+    getMetrixData(){
+      const queryParams = this.$route.query;
+      // call the API
+      this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
+        this.matricsData = res.data.data
+      }).catch((err) => {
+        this.$toaster.error(err)
+      }).finally(() => {
+        // After getting data from API
+      })
     }
   }
 }

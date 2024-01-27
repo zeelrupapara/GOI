@@ -2,9 +2,12 @@
   <!-- Topbar Start -->
   <div class="navbar-custom">
     <div class="container-fluid">
-      <ul class="list-unstyled topnav-menu float-right mb-0">
+      <ul class="list-unstyled topnav-menu float-right mb-0 mx-2">
         <li class="dropdown d-none d-lg-inline-block">
-          <a class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-toggle="fullscreen" href="#"
+          <button type="button" @click="clearFilter" v-b-tooltip.hover title="Reset Filters" class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i class="fas fa-undo noti-icon"></i></button>
+        </li>
+        <li class="dropdown d-none d-lg-inline-block mx-2">
+          <a v-b-tooltip.hover title="FullScreen" class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-toggle="fullscreen" href="#"
             @click="initFullScreen">
             <i class="fas fa-expand noti-icon"></i>
           </a>
@@ -95,6 +98,9 @@ export default {
     horizonalmenu() {
       const element = document.getElementById("topnav-menu-content");
       element.classList.toggle("show");
+    },
+    clearFilter(){
+      this.$router.push({ path: this.$route.path, query: {} })
     }
   }
 };

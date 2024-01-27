@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/Improwised/GPAT/constants"
@@ -18,4 +19,14 @@ func ParseTimeFromString(t string) (time.Time, error) {
 		return formatedTime, err
 	}
 	return formatedTime, nil
+}
+
+func ConvertEpochToTime(t string) (time.Time, error) {
+	epoch, err := strconv.ParseInt(t, 10, 64)
+	if err != nil {
+		return time.Time{}, err
+	}
+	seconds := epoch / 1000
+	datetime := time.Unix(seconds, 0).UTC()
+	return datetime, nil
 }

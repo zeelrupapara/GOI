@@ -27,7 +27,10 @@ export default {
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
   plugins: [
     "~/plugins/constants.js",
-    "~/plugins/axios.js"
+    "~/plugins/axios.js",
+    "~/plugins/toaster.js",
+    "~/plugins/utils.js",
+    { src: "~/plugins/no-ssr-modules.js", ssr: false, mode: "client" },
   ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
@@ -51,7 +54,11 @@ export default {
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
   axios: {
     // Workaround to avoid enforcing hard-coded localhost:3000: https://github.com/nuxt-community/axios-module/issues/308
-    baseURL: '/',
+    proxy: true,
+  },
+
+  proxy: {
+    "/api/v1": process.env.API_URL,
   },
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa

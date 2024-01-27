@@ -20,6 +20,49 @@ func (q *Queries) GetIssueByID(ctx context.Context, id string) (string, error) {
 	return id, err
 }
 
+const getIssueCountByFilters = `-- name: GetIssueCountByFilters :one
+SELECT
+    COUNT(DISTINCT i.id) AS issue_count
+FROM
+    public.issues i
+JOIN
+    public.repository_collaborators rc ON i.repository_collaborators_id = rc.id
+JOIN
+    public.repositories r ON rc.repo_id = r.id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+JOIN
+    public.assignees a ON i.id = a.issue_id
+WHERE
+    i.github_updated_at BETWEEN $1 AND $2
+    AND a.collaborator_id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+`
+
+type GetIssueCountByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+func (q *Queries) GetIssueCountByFilters(ctx context.Context, arg GetIssueCountByFiltersParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, getIssueCountByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	var issue_count int64
+	err := row.Scan(&issue_count)
+	return issue_count, err
+}
+
 const insertIssue = `-- name: InsertIssue :one
 INSERT INTO
     "issues" (

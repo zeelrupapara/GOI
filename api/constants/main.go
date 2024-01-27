@@ -13,6 +13,15 @@ const (
 	ParamOid string = "OrgID"
 )
 
+// query params
+const (
+	ORG_QP string = "orgs"
+	MEMBER_QP string = "membs"
+	REPO_QP string = "repos"
+	FROM string = "from"
+	TO string = "to"
+)
+
 // Success messages
 // ...
 const ()
@@ -23,5 +32,11 @@ const ()
 
 // Error messages
 const (
-	ErrGetOrganizations = "Unable to get organization list"
+	// filters
+	ErrGetOrganizationFilter = "Unable to get organization filter options"
+	ErrGetMemberFilter = "Unable to get member filter options"
+	ErrGetRepositoryFilter = "Unable to get repository filter options"
+
+	// matrix
+	ErrGetMatrics = "Unable to get matrics"
 )

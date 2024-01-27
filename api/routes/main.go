@@ -32,22 +32,37 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 
 	middlewares := middlewares.NewMiddleware(config, logger)
 
-	err := setupOrganizationController(v1, db, logger, middlewares)
+	err := setupFiltersController(v1, db, logger, middlewares)
 	if err != nil {
 		return err
 	}
 
+	err = setupMatrixController(v1, db, logger, middlewares)
+	if err != nil {
+		return err
+	}
 	mu.Unlock()
 	return nil
 }
 
-func setupOrganizationController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
-	organizationController, err := controller.NewOrganizationController(db, logger)
+func setupFiltersController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	filtersController, err := controller.NewFiltersController(db, logger)
 	if err != nil {
 		return err
 	}
+	filtersRouter := v1.Group("/filters")
+	filtersRouter.Get("/organization", filtersController.GetOrganizationFilterOptions)
+	filtersRouter.Get("/member", filtersController.GetMemberFilterOptions)
+	filtersRouter.Get("/repository", filtersController.GetRepositoryFilterOptions)
+	return nil
+}
 
-	organizationRouter := v1.Group("/organizations")
-	organizationRouter.Get("/", organizationController.GetOrganizations)
+func setupMatrixController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	matrixController, err := controller.NewMatrixController(db, logger)
+	if err != nil {
+		return err
+	}
+	matrixRouter := v1.Group("/matrics")
+	matrixRouter.Get("/", matrixController.GetMatrics)
 	return nil
 }
