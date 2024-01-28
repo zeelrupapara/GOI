@@ -2,17 +2,17 @@
   <div class="mt-3">
       <VueDraggable v-if="matricsData.length > 0" class="row">
         <b-col v-for="(matrix, index) in matricsData" :key="index" class="col-md-6 col-xl-3">
-          <CountWidget :count="matrix.count" :title="matrix.title" />
+          <WidgetCountCard :count="matrix.count" :title="matrix.title" />
         </b-col>
       </VueDraggable>
   </div>
 </template>
 <script>
-import CountWidget from "~/components/widgets/CountWidget.vue"
+import WidgetCountCard from "~/components/widgets/WidgetCountCard.vue"
 import { VueDraggable } from 'vue-draggable-plus';
 export default {
   components: {
-    CountWidget,
+    WidgetCountCard,
     VueDraggable
   },
   data() {
@@ -31,10 +31,9 @@ export default {
     await this.getMetrixData()
   },
   methods:{
-    getMetrixData(){
+    async getMetrixData(){
       const queryParams = this.$route.query;
-      // call the API
-      this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
+      await this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
         this.matricsData = res.data.data
       }).catch((err) => {
         this.$toaster.error(err)

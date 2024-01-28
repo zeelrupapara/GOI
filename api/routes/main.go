@@ -41,6 +41,12 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 	if err != nil {
 		return err
 	}
+
+	err = setupContributionsController(v1, db, logger, middlewares)
+	if err != nil {
+		return err
+	}
+
 	mu.Unlock()
 	return nil
 }
@@ -64,5 +70,17 @@ func setupMatrixController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, midd
 	}
 	matrixRouter := v1.Group("/matrics")
 	matrixRouter.Get("/", matrixController.GetMatrics)
+	return nil
+}
+
+func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	contributionController, err := controller.NewContributionController(db, logger)
+	if err != nil {
+		return err
+	}
+	contributionRouter := v1.Group("/contributions")
+	contributionRouter.Get("/organization", contributionController.GetOrganizationContributions)
+	contributionRouter.Get("/pullrequest", contributionController.GetPullRequestContributions)
+	contributionRouter.Get("/issue", contributionController.GetIssueContributions)
 	return nil
 }

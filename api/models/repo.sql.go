@@ -27,22 +27,25 @@ SELECT
 	COUNT(DISTINCT  r.id)
 FROM
     public.repositories r
-FULL JOIN
+JOIN
     public.repository_collaborators rc ON r.id = rc.repo_id
-FULL JOIN
+JOIN
     public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
-FULL JOIN
+JOIN
     public.organizations org ON oc.organization_id = org.id
-FULL JOIN
+LEFT JOIN
     public.issues i ON rc.id = i.repository_collaborators_id
-FULL JOIN
+LEFT JOIN
     public.pull_requests pr ON rc.id = pr.repository_collaborators_id
-FULL JOIN
+LEFT JOIN
     public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
-FULL JOIN
+LEFT JOIN
     public.collaborators coll ON a.collaborator_id = coll.id
 WHERE
-    (i.github_updated_at  BETWEEN $1 AND $2 OR pr.github_updated_at between  $1 AND $2)
+    (
+        (pr.github_updated_at BETWEEN $1 AND $2) OR
+        (i.github_updated_at BETWEEN $1 AND $2)
+    )
     AND coll.id = ANY(string_to_array($3, ','))
     AND org.id = ANY(string_to_array($4, ','))
     AND rc.repo_id = ANY(string_to_array($5, ','))

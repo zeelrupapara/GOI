@@ -15,8 +15,20 @@ const CONSTANTS = {
     ORG_QP: "orgs",
     REPO_QP: "repo",
     MEMBER_QP: "membs",
-
   },
+
+  // charts
+  CHART:{
+    ORG_CHART_TITLE: "Organizations Contribution",
+
+    // colors
+    OPEN_PR_COLOR: "rgb(34, 134, 58, 0.6)",
+    CLOSED_PR_COLOR: "rgb(214, 23, 38, 0.6)",
+    MERGED_PR_COLOR: "rgb(136, 23, 152, 0.6)",
+    OPEN_ISSUE_COLOR: "rgb(34, 134, 58, 0.6)",
+    CLOSED_ISSUE_COLOR: "rgb(214, 23, 38, 0.6)",
+  },
+
   STATUS_CODES: {
     100: "Continue",
     101: "Switching Protocols",

@@ -2,17 +2,20 @@
   <div>
     <FilterSection />
     <MatrixSection />
+    <ChartSection />
   </div>
 </template>
 
 <script>
 import FilterSection from '~/components/sections/FilterSection.vue';
 import MatrixSection from '~/components/sections/MatrixSection.vue';
+import ChartSection from '~/components/sections/ChartSection.vue';
 export default {
-  name: 'IndexPage',
+  name: 'Home',
   components: {
     FilterSection,
-    MatrixSection
+    MatrixSection,
+    ChartSection
   }
 }
 </script>
