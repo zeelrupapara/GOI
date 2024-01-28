@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 const utils = {
   getDaysToMilliSecond: (days) => {
     return days * 24 * 3600 * 1000
@@ -9,6 +10,9 @@ const utils = {
     }
     return `hsl(${hash % 360}, 100%, 80%)`;
   },
+  getFormattedTimeStamp: (timestamp) => {
+    return dayjs(timestamp).format("DD/MM/YY")
+  }
 }
 
 export default utils;

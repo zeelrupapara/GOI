@@ -78,7 +78,7 @@ export default {
           if (res.data.data) {
             const prControbutions = res.data.data;
             if (prControbutions.length > 0) {
-              const prControbutionsLables = prControbutions.map(item => item.date);
+              const prControbutionsLables = prControbutions.map(item => this.$utils.getFormattedTimeStamp(item.date));
               const prControbutionsDatasets = [{
                 label: 'OPEN',
                 data: prControbutions.map(item => item.total_open_prs),
@@ -117,7 +117,7 @@ export default {
           if (res.data.data) {
             const issueContributions = res.data.data;
             if (issueContributions.length > 0) {
-              const issueContributionsLables = issueContributions.map(item => item.date);
+              const issueContributionsLables = issueContributions.map(item => this.$utils.getFormattedTimeStamp(item.date));
               const issueContributionsDatasets = [{
                 label: 'OPEN',
                 data: issueContributions.map(item => item.total_open_issues),

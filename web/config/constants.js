@@ -22,11 +22,11 @@ const CONSTANTS = {
     ORG_CHART_TITLE: "Organizations Contribution",
 
     // colors
-    OPEN_PR_COLOR: "#4bf773",
-    CLOSED_PR_COLOR: "#f74b79",
-    MERGED_PR_COLOR: "#b54bf7",
-    OPEN_ISSUE_COLOR: "#4bf773",
-    CLOSED_ISSUE_COLOR: "#f74b79",
+    OPEN_PR_COLOR: "rgb(34, 134, 58, 0.6)",
+    CLOSED_PR_COLOR: "rgb(214, 23, 38, 0.6)",
+    MERGED_PR_COLOR: "rgb(136, 23, 152, 0.6)",
+    OPEN_ISSUE_COLOR: "rgb(34, 134, 58, 0.6)",
+    CLOSED_ISSUE_COLOR: "rgb(214, 23, 38, 0.6)",
   },
 
   STATUS_CODES: {
