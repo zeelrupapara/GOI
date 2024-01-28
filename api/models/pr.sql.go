@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const getPRByID = `-- name: GetPRByID :one
@@ -70,6 +71,85 @@ func (q *Queries) GetPRCountByFilters(ctx context.Context, arg GetPRCountByFilte
 	var count int64
 	err := row.Scan(&count)
 	return count, err
+}
+
+const getPullRequestContributionByFilters = `-- name: GetPullRequestContributionByFilters :many
+SELECT
+    DATE(pr.github_updated_at),
+    COUNT(DISTINCT pr.id) FILTER(WHERE pr.status = 'OPEN') AS total_open_prs,
+    COUNT(DISTINCT pr.id) FILTER(WHERE pr.status = 'CLOSED') AS total_closed_prs,
+    COUNT(DISTINCT pr.id) FILTER(WHERE pr.status = 'MERGED') AS total_merged_prs
+FROM
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+LEFT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+LEFT JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+LEFT JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    (pr.github_updated_at BETWEEN $1 AND $2)   
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+GROUP BY DATE(pr.github_updated_at)
+`
+
+type GetPullRequestContributionByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+type GetPullRequestContributionByFiltersRow struct {
+	Date           time.Time `json:"date"`
+	TotalOpenPrs   int64     `json:"total_open_prs"`
+	TotalClosedPrs int64     `json:"total_closed_prs"`
+	TotalMergedPrs int64     `json:"total_merged_prs"`
+}
+
+func (q *Queries) GetPullRequestContributionByFilters(ctx context.Context, arg GetPullRequestContributionByFiltersParams) ([]GetPullRequestContributionByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPullRequestContributionByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPullRequestContributionByFiltersRow
+	for rows.Next() {
+		var i GetPullRequestContributionByFiltersRow
+		if err := rows.Scan(
+			&i.Date,
+			&i.TotalOpenPrs,
+			&i.TotalClosedPrs,
+			&i.TotalMergedPrs,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const insertPR = `-- name: InsertPR :one

@@ -31,9 +31,9 @@ export default {
     await this.getMetrixData()
   },
   methods:{
-    getMetrixData(){
+    async getMetrixData(){
       const queryParams = this.$route.query;
-      this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
+      await this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
         this.matricsData = res.data.data
       }).catch((err) => {
         this.$toaster.error(err)

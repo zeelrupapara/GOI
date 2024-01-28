@@ -20,6 +20,13 @@ const CONSTANTS = {
   // charts
   CHART:{
     ORG_CHART_TITLE: "Organizations Contribution",
+
+    // colors
+    OPEN_PR_COLOR: "#4bf773",
+    CLOSED_PR_COLOR: "#f74b79",
+    MERGED_PR_COLOR: "#b54bf7",
+    OPEN_ISSUE_COLOR: "#4bf773",
+    CLOSED_ISSUE_COLOR: "#f74b79",
   },
 
   STATUS_CODES: {

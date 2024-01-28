@@ -42,4 +42,6 @@ const (
 
 	// contribution
 	ErrGetOrganizationContributions = "Unable to get organization contributions"
+	ErrGetPullRequestContributions = "Unable to get pull request contributions"
+	ErrGetIssueContributions = "Unable to get issue contributions"
 )

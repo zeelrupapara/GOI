@@ -62,10 +62,10 @@ export default {
     await this.getOrganizationContributionsData();
   },
   methods: {
-    getOrganizationContributionsData() {
+    async getOrganizationContributionsData() {
       this.contentLoaded = !this.firstTimeLoaded;
       const queryParams = this.$route.query;
-      this.$axios
+      await this.$axios
         .get(`${this.$constants.API_URL_PREFIX}/contributions/organization`, { params: queryParams })
         .then((res) => {
           if (res.data.data) {

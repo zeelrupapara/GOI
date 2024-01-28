@@ -80,5 +80,7 @@ func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logge
 	}
 	contributionRouter := v1.Group("/contributions")
 	contributionRouter.Get("/organization", contributionController.GetOrganizationContributions)
+	contributionRouter.Get("/pullrequest", contributionController.GetPullRequestContributions)
+	contributionRouter.Get("/issue", contributionController.GetIssueContributions)
 	return nil
 }

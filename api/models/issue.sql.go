@@ -8,6 +8,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"time"
 )
 
 const getIssueByID = `-- name: GetIssueByID :one
@@ -18,6 +19,78 @@ func (q *Queries) GetIssueByID(ctx context.Context, id string) (string, error) {
 	row := q.db.QueryRowContext(ctx, getIssueByID, id)
 	err := row.Scan(&id)
 	return id, err
+}
+
+const getIssueContributionByFilters = `-- name: GetIssueContributionByFilters :many
+SELECT
+    DATE(i.github_updated_at),
+    COUNT(DISTINCT i.id) FILTER(WHERE i.status = 'OPEN') AS total_open_issues,
+    COUNT(DISTINCT i.id) FILTER(WHERE i.status = 'CLOSED') AS total_closed_issues
+FROM
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+LEFT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+LEFT JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+LEFT JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    (i.github_updated_at BETWEEN $1 AND $2)   
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+GROUP BY DATE(i.github_updated_at)
+`
+
+type GetIssueContributionByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+type GetIssueContributionByFiltersRow struct {
+	Date              time.Time `json:"date"`
+	TotalOpenIssues   int64     `json:"total_open_issues"`
+	TotalClosedIssues int64     `json:"total_closed_issues"`
+}
+
+func (q *Queries) GetIssueContributionByFilters(ctx context.Context, arg GetIssueContributionByFiltersParams) ([]GetIssueContributionByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getIssueContributionByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetIssueContributionByFiltersRow
+	for rows.Next() {
+		var i GetIssueContributionByFiltersRow
+		if err := rows.Scan(&i.Date, &i.TotalOpenIssues, &i.TotalClosedIssues); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const getIssueCountByFilters = `-- name: GetIssueCountByFilters :one

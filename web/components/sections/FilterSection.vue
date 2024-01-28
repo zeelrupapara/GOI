@@ -30,8 +30,8 @@ export default {
     await this.getRepositoryFilterOptions()
   },
   methods: {
-    getOrgnizationFilterOptions() {
-      this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/organization`).then((res) => {
+    async getOrgnizationFilterOptions() {
+      await this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/organization`).then((res) => {
         res = res.data.data;
         let selectedOrgs = null
         if (this.$route.query.orgs){
@@ -51,8 +51,8 @@ export default {
         // After getting data from API
       })
     },
-    getRepositoryFilterOptions() {
-      this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/repository`).then((res) => {
+    async getRepositoryFilterOptions() {
+      await this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/repository`).then((res) => {
         res = res.data.data;
         let selectedRepos = null
         if (this.$route.query.repos){
@@ -71,8 +71,8 @@ export default {
         // After getting data from API
       })
     },
-    getMemberFilterOptions() {
-      this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/member`).then((res) => {
+    async getMemberFilterOptions() {
+      await this.$axios.get(`${this.$constants.API_URL_PREFIX}/filters/member`).then((res) => {
         res = res.data.data;
         let selectedMembs = null
         if (this.$route.query.membs) {
