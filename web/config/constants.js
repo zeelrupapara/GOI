@@ -30,7 +30,7 @@ const CONSTANTS = {
   },
 
   STATUS_CODES: {
-    100: "Continue",
+    100: "Continue",  
     101: "Switching Protocols",
     102: "Processing",
     103: "Early Hints",

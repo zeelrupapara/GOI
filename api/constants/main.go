@@ -3,6 +3,7 @@ package constants
 // variables
 const (
 	DateTimeFormat string = "2006-01-02T15:04:05Z"
+	PAGINATION_LIMIT int32 = 10
 )
 
 // fiber contexts
@@ -20,6 +21,8 @@ const (
 	REPO_QP string = "repos"
 	FROM string = "from"
 	TO string = "to"
+	PR_PAGE_NUMBER string = "pr_page"
+	ISSUE_PAGE_NUMBER string = "issue_page"
 )
 
 // Success messages
@@ -44,4 +47,6 @@ const (
 	ErrGetOrganizationContributions = "Unable to get organization contributions"
 	ErrGetPullRequestContributions = "Unable to get pull request contributions"
 	ErrGetIssueContributions = "Unable to get issue contributions"
+	ErrGetPullRequestContributionInDetailsByFilters = "Unable to get pull request contribution in details by filters"
+	ErrGetIssueContributionsInDetailsByFilters = "Unable to get issue contribution in details by filters"
 )

@@ -152,6 +152,101 @@ func (q *Queries) GetPullRequestContributionByFilters(ctx context.Context, arg G
 	return items, nil
 }
 
+const getPullRequestContributionDetailsByFilters = `-- name: GetPullRequestContributionDetailsByFilters :many
+SELECT DISTINCT
+    pr.id AS id,
+    pr.url AS url,
+    pr.title AS title,
+    pr.status AS status,
+    coll.login AS assignee_name,
+    r.name AS repository_name,
+    org.login AS organization_name,
+    pr.github_updated_at AS updated_at
+FROM
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
+    public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+JOIN
+    public.organizations org ON oc.organization_id = org.id
+LEFT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+LEFT JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+LEFT JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
+WHERE
+    (pr.github_updated_at BETWEEN $1 AND $2)   
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND org.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+ORDER BY pr.github_updated_at DESC LIMIT $6 OFFSET $7
+`
+
+type GetPullRequestContributionDetailsByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+	Limit             int32        `json:"limit"`
+	Offset            int32        `json:"offset"`
+}
+
+type GetPullRequestContributionDetailsByFiltersRow struct {
+	ID               sql.NullString `json:"id"`
+	Url              sql.NullString `json:"url"`
+	Title            sql.NullString `json:"title"`
+	Status           sql.NullString `json:"status"`
+	AssigneeName     sql.NullString `json:"assignee_name"`
+	RepositoryName   sql.NullString `json:"repository_name"`
+	OrganizationName string         `json:"organization_name"`
+	UpdatedAt        sql.NullTime   `json:"updated_at"`
+}
+
+func (q *Queries) GetPullRequestContributionDetailsByFilters(ctx context.Context, arg GetPullRequestContributionDetailsByFiltersParams) ([]GetPullRequestContributionDetailsByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getPullRequestContributionDetailsByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetPullRequestContributionDetailsByFiltersRow
+	for rows.Next() {
+		var i GetPullRequestContributionDetailsByFiltersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Url,
+			&i.Title,
+			&i.Status,
+			&i.AssigneeName,
+			&i.RepositoryName,
+			&i.OrganizationName,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertPR = `-- name: InsertPR :one
 INSERT INTO
     "pull_requests" (
