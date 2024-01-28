@@ -17,6 +17,10 @@ const CONSTANTS = {
     MEMBER_QP: "membs",
 
   },
+
+  // charts
+  ORG_CHART_TITLE: "Organizations Contribution",
+
   STATUS_CODES: {
     100: "Continue",
     101: "Switching Protocols",

@@ -21,19 +21,26 @@ SELECT issues.id FROM "issues" WHERE issues.id = $1;
 SELECT
     COUNT(DISTINCT i.id) AS issue_count
 FROM
-    public.issues i
-FULL JOIN
-    public.repository_collaborators rc ON i.repository_collaborators_id = rc.id
-FULL JOIN
-    public.repositories r ON rc.repo_id = r.id
-FULL JOIN
+    public.repositories r
+JOIN
+    public.repository_collaborators rc ON r.id = rc.repo_id
+JOIN
     public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
-FULL JOIN
+JOIN
     public.organizations org ON oc.organization_id = org.id
-FULL JOIN
-    public.assignees a ON i.id = a.issue_id
+LEFT JOIN
+    public.issues i ON rc.id = i.repository_collaborators_id
+LEFT JOIN
+    public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+LEFT JOIN
+    public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+LEFT JOIN
+    public.collaborators coll ON a.collaborator_id = coll.id
 WHERE
-    i.github_updated_at BETWEEN $1 AND $2
+    (
+        (pr.github_updated_at BETWEEN $1 AND $2) OR
+        (i.github_updated_at BETWEEN $1 AND $2)
+    )
     AND a.collaborator_id = ANY(string_to_array($3, ','))
     AND org.id = ANY(string_to_array($4, ','))
     AND r.id = ANY(string_to_array($5, ','));
