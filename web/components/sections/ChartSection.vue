@@ -37,7 +37,7 @@ export default {
   },
   data(){
     return {
-      pieChartTitle: this.$constants.ORG_CHART_TITLE
+      pieChartTitle: this.$constants.CHART.ORG_CHART_TITLE
     }
   }
 }

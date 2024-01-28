@@ -15,11 +15,12 @@ const CONSTANTS = {
     ORG_QP: "orgs",
     REPO_QP: "repo",
     MEMBER_QP: "membs",
-
   },
 
   // charts
-  ORG_CHART_TITLE: "Organizations Contribution",
+  CHART:{
+    ORG_CHART_TITLE: "Organizations Contribution",
+  },
 
   STATUS_CODES: {
     100: "Continue",

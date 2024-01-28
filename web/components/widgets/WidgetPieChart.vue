@@ -4,16 +4,9 @@
       <div v-if="firstTimeLoaded" class="card-body">
         <h4 class="header-title">{{ title }}</h4>
         <div class="widget-chart">
-          <div
-            class="d-flex align-items-center justify-content-center"
-          >
+          <div class="d-flex align-items-center justify-content-center">
           </div>
-          <pie-chart
-            v-if="Object.keys(chartData).length"
-            class="mt-4"
-            :chart-data="chartData"
-            :height="300"
-          />
+          <pie-chart v-if="Object.keys(orgChartData).length" class="mt-4" :chart-data="orgChartData" :height="300" />
           <!-- <div v-else class="text-center">
             <img
               src="~/assets/images/emptyGraph.svg"
@@ -52,103 +45,48 @@ export default {
   },
   data() {
     return {
-      chartData: {
-        labels: ['Red', 'Orange'],
-        datasets: [
-            {
-              data: [300, 20, 40],
-              backgroundColor: [
-                '#FF6384', '#36A2EB', '#FFCE56', '#FF6384', '#36A2EB'
-              ]
-            }
-          ]
-      },
+      orgChartData: {},
       firstTimeLoaded: true,
-      totalRequests: 0,
       contentLoaded: true
-    };
+    }
   },
-  computed: {
-    // getUrl() {
-    //   const jobId = this.query.job_id || "";
-    //   const from = this.query.from;
-    //   const to = this.query.to;
-    //   const status = this.query.status || common.defaultStatus;
-    //   const siteKey = this.query.site_key || "";
-    //   if (this.params.key) {
-    //     return `${this.$constants.API_URL_PREFIX}/accounts/${this.params.slug}/sites/${this.params.key}/widgets/status-code-overall?from=${from}&to=${to}&status=${status}`;
-    //   }
-    //   return `${this.$constants.API_URL_PREFIX}/accounts/${this.params.slug}/sites/widgets/status-code-overall?from=${from}&to=${to}&job_id=${jobId}&status=${status}&site_key=${siteKey}`;
-    // }
+  watch: {
+    "$route.query": {
+      handler() {
+        this.getOrganizationContributionsData()
+      }
+    }
   },
-  // watch: {
-  //   query: {
-  //     handler(newVal, oldVal) {
-  //       if (
-  //         newVal.from !== oldVal.from ||
-  //         newVal.to !== oldVal.to ||
-  //         newVal.job_id !== oldVal.job_id ||
-  //         newVal.status !== oldVal.status ||
-  //         newVal.site_key !== oldVal.site_key
-  //       ) {
-  //         this.getBotActivityData();
-  //       }
-  //     }
-  //   }
-  // },
-  mounted() {
-    this.firstTimeLoaded = true;
-    // this.getBotActivityData();
+  async mounted() {
+    this.firstTimeLoaded = false;
+    await this.getOrganizationContributionsData();
   },
   methods: {
-    getBotActivityData() {
-      if (!this.query.from || !this.query.to) {
-        return;
-      }
+    getOrganizationContributionsData() {
       this.contentLoaded = !this.firstTimeLoaded;
+      const queryParams = this.$route.query;
       this.$axios
-        .get(this.getUrl)
+        .get(`${this.$constants.API_URL_PREFIX}/contributions/organization`, { params: queryParams })
         .then((res) => {
           if (res.data.data) {
-            const statusCodedata = res.data.data;
-            if (statusCodedata && Object.keys(statusCodedata).length > 0) {
-              // Visible only status codes that is supplied in query params
-              // If not supplied any status code It includes all
-              let statusIncludingTotal =
-                (this.query &&
-                  this.query.status &&
-                  Object.keys(this.query.status).length &&
-                  this.query.status.split(",")) ||
-                Object.keys(statusCodedata);
-              statusIncludingTotal = statusIncludingTotal.sort();
-              const statusCodeName = statusIncludingTotal.filter(
-                (s) => s !== "total"
-              );
-              const statusCodeValue = [];
-              for (const prop of statusCodeName) {
-                statusCodeValue.push(statusCodedata[prop].Total);
+            const orgContributions = res.data.data;
+            if (orgContributions.length > 0) {
+              const pieChartLables = orgContributions.map(item => item.organization_name);
+              const pieChartDatasets = [{
+                data: orgContributions.map(item => item.total_prs + item.total_issues),
+                backgroundColor: orgContributions.map(item => this.$utils.getColor(item.organization_name)),
+              }]
+              this.orgChartData = {
+                labels: pieChartLables,
+                datasets: pieChartDatasets
               }
-              const backgroundColor = statusCodeName.map((statusCode) => {
-                return this.$constants.HTTP_COLORS_CODE[statusCode];
-              });
-              this.totalRequests = statusCodedata.total.Total;
-              this.chartData = {
-                labels: statusCodeName,
-                datasets: [
-                  {
-                    data: statusCodeValue,
-                    backgroundColor,
-                    borderColor: "transparent"
-                  }
-                ]
-              };
             }
           } else {
-            this.chartData = {};
+            this.orgChartData = {};
           }
         })
         .catch((err) => {
-          this.chartData = {};
+          this.orgChartData = {};
           this.$toaster.error(err);
         })
         .finally(() => {

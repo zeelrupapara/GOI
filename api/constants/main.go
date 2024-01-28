@@ -39,4 +39,7 @@ const (
 
 	// matrix
 	ErrGetMatrics = "Unable to get matrics"
+
+	// contribution
+	ErrGetOrganizationContributions = "Unable to get organization contributions"
 )

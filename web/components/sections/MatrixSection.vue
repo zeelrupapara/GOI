@@ -33,7 +33,6 @@ export default {
   methods:{
     getMetrixData(){
       const queryParams = this.$route.query;
-      // call the API
       this.$axios.get(`${this.$constants.API_URL_PREFIX}/matrics`, { params: queryParams }).then((res) => {
         this.matricsData = res.data.data
       }).catch((err) => {
