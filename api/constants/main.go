@@ -3,7 +3,7 @@ package constants
 // variables
 const (
 	DateTimeFormat string = "2006-01-02T15:04:05Z"
-	PAGINATION_LIMIT int32 = 10
+	PAGINATION_LIMIT int32 = 5
 )
 
 // fiber contexts
