@@ -12,7 +12,7 @@ export default {};
       <div class="row">
         <div class="col-md-6">
           {{ new Date().getFullYear() }} &copy; Rights reserved by
-          <a href="https://logs.webauditor.co/?utm_source=footer">{{
+          <a href="https://www.improwised.com/" target="_blank">{{
             $constants.PRODUCT_NAME
           }}</a>
         </div>
