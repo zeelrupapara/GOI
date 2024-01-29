@@ -12,35 +12,68 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_DB=GPAT
   
-  # migration:
-  #   build:
-  #     context: ./api/
-  #   restart: on-failure
-  #   depends_on:
-  #     - db
-  #   env_file:
-  #     - ./api/.env.docker
-  #   entrypoint: [ /bin/sh ]
-  #   command:
-  #     - -c
-  #     - /app/GPAT migrate up
-
-  api:
-    image: cosmtrek/air
-    ports:
-      - 8000:8000
-    volumes:
-      - ./api/:/go/src/app/:ro
-    environment:
-      - air_wd=/go/src/app/
-    env_file:
-      - ./api/.env.docker
-    command: |
-      -c /go/src/app/air.toml
+  migration:
+    build:
+      context: ./api/
+    restart: on-failure
     depends_on:
       - db
-      # - migration
+    env_file:
+      - ./api/.env.docker
+    command: migrate up
 
+  github:
+    build:
+      context: ./api/
+    depends_on:
+      - db
+      - migration
+    env_file:
+      - ./api/.env.docker
+    command: github
+
+  # backend:
+  #   image: cosmtrek/air
+  #   ports:
+  #     - 8000:8000
+  #   volumes:
+  #     - ./api/:/go/src/app/:ro
+  #   environment:
+  #     - air_wd=/go/src/app/
+  #   env_file:
+  #     - ./api/.env.docker
+  #   command: |
+  #     -c /go/src/app/air.toml
+  #   depends_on:
+  #     - db
+  #     - migration
+
+  # frontend:
+  #   build:
+  #     context: ./web/
+  #   restart: on-failure
+  #   depends_on:
+  #     - api
+  #   env_file:
+  #     - ./web/.env.docker
+  #   volumes:
+  #     - ./web/:/usr/src/app
+  #   ports:
+  #     - 3000:3000
+  
+  api:
+    build:
+      context: ./api/
+    restart: on-failure
+    depends_on:
+      - db
+      - migration
+    env_file:
+      - ./api/.env.docker
+    ports:
+      - 8080:8000
+    
+    
   web:
     build:
       context: ./web/
@@ -49,10 +82,8 @@ services:
       - api
     env_file:
       - ./web/.env.docker
-    volumes:
-      - ./web/:/usr/src/app
     ports:
-      - 3000:3000
+      - 5000:3000
 
   nginx:
     image: nginx:latest
