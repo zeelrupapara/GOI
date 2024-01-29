@@ -38,10 +38,10 @@
                       <div class="col">
                         <div class="float-right">
                           <b-row>
-                            <b-col v-if="pageInfo.previous">
+                            <b-col v-show="pageInfo.previous">
                               <button type="button" @click="previousPage" class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i class="fas fa-angle-left noti-icon"></i></button>
                             </b-col>
-                            <b-col v-if="pageInfo.next">
+                            <b-col v-show="pageInfo.next">
                               <button type="button" @click="nextPage" class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i class="fas fa-angle-right noti-icon"></i></button>
                             </b-col>
                           </b-row>
@@ -89,13 +89,13 @@ export default {
       return this.$utils.getFormattedTimeStamp(date)
     },
     nextPage(){
-      const queryParams = this.$route.query
+      const queryParams = { ...this.$route.query };
       switch (this.tableName) {
         case 'PR':
           if (!queryParams.pr_page) {
             queryParams.pr_page = 2;
           }else{
-            queryParams.pr_page = queryParams.pr_page + 1;
+            queryParams.pr_page = (Number(queryParams.pr_page) + 1).toString();
           }
           break;
 
@@ -103,24 +103,26 @@ export default {
           if (!queryParams.issue_page) {
             queryParams.issue_page = 2;
           }else{
-            queryParams.issue_page = queryParams.issue_page + 1;
+            queryParams.issue_page = (Number(queryParams.issue_page) + 1).toString();
           }
           break;
 
         case null:
           break;
       }
-      this.$router.push({ query: queryParams });
+      this.$router.push({
+        query: queryParams
+      })
     },
     previousPage(){
-      const queryParams = this.$route.query
+      const queryParams = { ...this.$route.query };
       switch (this.tableName) {
         case "PR":
           if (!queryParams.pr_page) {
             queryParams.pr_page = 1;
           }else{
-            if (queryParams.pr_page > 1) {
-              queryParams.pr_page = queryParams.pr_page - 1;
+            if (Number(queryParams.pr_page) > 1) {
+              queryParams.pr_page = (Number(queryParams.pr_page) - 1).toString();
             }
           }
           break;
@@ -128,15 +130,17 @@ export default {
           if (!queryParams.issue_page) {
             queryParams.issue_page = 1;
           }else{
-            if (queryParams.issue_page > 1) {
-              queryParams.issue_page = queryParams.issue_page - 1;
+            if (Number(queryParams.issue_page) > 1) {
+              queryParams.issue_page = (Number(queryParams.issue_page) - 1).toString();
             }
           }
           break;
         case null:
           break;
         }
-        this.$router.push({ query: queryParams })
+        this.$router.push({
+          query: queryParams
+        })
     }
   }
 }
