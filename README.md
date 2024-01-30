@@ -21,30 +21,21 @@ To interact with the Github API, you'll need to set up a personal access token. 
 2. Click on "Generate token" and select the necessary scopes (at least read access to organizations).
 3. Copy the generated token.
 
-Now, create a `.env` file in the project directory and add the token:
+Now, add `GITHUB_TOKEN` to `.env.docker` file for the api:
 
 ```bash
-cd api
-echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> .env.example
-cp .env.example .env
+echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> ./api/.env.example
 ```
-### Step 3: Start Database
+### Step 3: Start All Service Using Docker
 
-To start postgres database server using docker-compose file
+To start all server (api, ui, database) using docker-compose file
 ```bash
 docker compose up
 ```
+Click [GPAT](http://localhost) for access the UI 
 
-### Step 4: Apply Migrations
-
-GPAT uses migrations to set up the necessary database structure. Apply the migrations using the following command:
-
-```bash
-go run main.go migrate up
-```
-
-### Step 5: Retrieve Data from Github
-
+### Step 4: Retrieve Data from Github
+> This command is optional If you want the another time range data from github instad of currunt week
 Fetch organization and member data from Github using:
 
 ```bash
