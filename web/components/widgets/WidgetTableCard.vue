@@ -158,7 +158,7 @@ export default {
           query: queryParams
         })
     },
-    statusChange(){
+    onStatusChange(){
       const queryParams = { ...this.$route.query };
       switch (this.tableName) {
         case 'PR':
