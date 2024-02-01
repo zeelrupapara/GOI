@@ -2,11 +2,13 @@ package routes
 
 import (
 	"database/sql"
+	"fmt"
 	"sync"
 
 	"go.uber.org/zap"
 
 	"github.com/Improwised/GPAT/config"
+	"github.com/Improwised/GPAT/constants"
 	controller "github.com/Improwised/GPAT/controllers/api/v1"
 
 	"github.com/Improwised/GPAT/middlewares"
@@ -80,8 +82,8 @@ func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logge
 	}
 	contributionRouter := v1.Group("/contributions")
 	contributionRouter.Get("/organization", contributionController.GetOrganizationContributions)
-	contributionRouter.Get("/pullrequest", contributionController.GetPullRequestContributions)
-	contributionRouter.Get("/issue", contributionController.GetIssueContributions)
+	contributionRouter.Get(fmt.Sprintf("/pullrequest/status/:%s", constants.ParamStatus), contributionController.GetPullRequestContributions)
+	contributionRouter.Get(fmt.Sprintf("/issue/status/:%s", constants.ParamStatus), contributionController.GetIssueContributions)
 	contributionRouter.Get("/pullrequest/details", contributionController.GetPullRequestContributionInDetailsByFilters)
 	contributionRouter.Get("/issue/details", contributionController.GetIssueContributionInDetailsByFilters)
 	return nil

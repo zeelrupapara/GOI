@@ -141,12 +141,22 @@ func (ctrl *ContributionControllers) GetOrganizationContributions(c *fiber.Ctx) 
 	return utils.JSONSuccess(c, 200, orgContributions)
 }
 
+// Get Count of User Wise PR by Status
 func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) error {
 	var orgs []string
 	var repos []string
 	var members []string
 	var from time.Time
 	var to time.Time
+	var status string
+
+	// get status from the params
+	statusQP := c.Params(constants.ParamStatus)
+	if statusQP == "" {
+		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+	}
+
+	status = strings.ToUpper(statusQP)
 
 	// get orgs
 	orgsQP := c.Query(constants.ORG_QP)
@@ -217,6 +227,7 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 		StringToArray:     membersStrings,
 		StringToArray_2:   orgStrings,
 		StringToArray_3:   reposStrings,
+		Status:            sql.NullString{String: status, Valid: true},
 	})
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetPullRequestContributions)
@@ -249,12 +260,22 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 	return utils.JSONSuccess(c, 200, dateWiseUserPrContributionRes)
 }
 
+// Get Count of User Wise Issue by Status
 func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 	var orgs []string
 	var repos []string
 	var members []string
 	var from time.Time
 	var to time.Time
+	var status string
+
+	// get status from the params
+	statusQP := c.Params(constants.ParamStatus)
+	if statusQP == "" {
+		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+	}
+
+	status = strings.ToUpper(statusQP)
 
 	// get orgs
 	orgsQP := c.Query(constants.ORG_QP)
@@ -325,6 +346,7 @@ func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 		StringToArray:     membersStrings,
 		StringToArray_2:   orgStrings,
 		StringToArray_3:   reposStrings,
+		Status:            status,
 	})
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
