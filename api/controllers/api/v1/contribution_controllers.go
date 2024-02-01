@@ -386,8 +386,17 @@ func (ctrl *ContributionControllers) GetPullRequestContributionInDetailsByFilter
 	var from time.Time
 	var to time.Time
 	var page int32
+	var status string
 	var hasPreviousPage bool = true
 	var hasNextPage bool = true
+
+	// get status
+	statusQP := c.Query(constants.PR_STATUS)
+	if statusQP == "" {
+		status = "OPEN, CLOSED, MERGED"
+	} else {
+		status = strings.ToUpper(statusQP)
+	}
 
 	// get orgs
 	orgsQP := c.Query(constants.ORG_QP)
@@ -472,6 +481,7 @@ func (ctrl *ContributionControllers) GetPullRequestContributionInDetailsByFilter
 		StringToArray_3:   reposStrings,
 		Limit:             constants.PAGINATION_LIMIT,
 		Offset:            constants.PAGINATION_LIMIT * (page - 1),
+		StringToArray_4:   status,
 	})
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetPullRequestContributionInDetailsByFilters)
@@ -511,8 +521,17 @@ func (ctrl *ContributionControllers) GetIssueContributionInDetailsByFilters(c *f
 	var from time.Time
 	var to time.Time
 	var page int32
+	var status string
 	var hasPreviousPage bool = true
 	var hasNextPage bool = true
+
+	// get status
+	statusQP := c.Query(constants.ISSUE_STATUS)
+	if statusQP == "" {
+		status = "OPEN, CLOSED"
+	} else {
+		status = strings.ToUpper(statusQP)
+	}
 
 	// get orgs
 	orgsQP := c.Query(constants.ORG_QP)
@@ -597,6 +616,7 @@ func (ctrl *ContributionControllers) GetIssueContributionInDetailsByFilters(c *f
 		StringToArray_3:   reposStrings,
 		Limit:             constants.PAGINATION_LIMIT,
 		Offset:            constants.PAGINATION_LIMIT * (page - 1),
+		StringToArray_4:   status,
 	})
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetIssueContributionsInDetailsByFilters)
