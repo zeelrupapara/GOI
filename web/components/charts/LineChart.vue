@@ -1,8 +1,8 @@
 <script>
-import { Bar, mixins } from "vue-chartjs";
+import { Line, mixins } from "vue-chartjs";
 // import utils from "@/utils/utils.js";
 export default {
-  extends: Bar,
+  extends: Line,
   mixins: [mixins.reactiveProp],
   props: {
     chartData: {
@@ -54,42 +54,10 @@ export default {
               borderWidth: 0,
               hitRadius: 4
             },
-            line: {
-              tension: 0
-            }
           },
           gridLines: {
             reverse: true
           },
-          scales: {
-            xAxes: [
-              {
-                ticks: {
-                  autoSkip: true,
-                  maxTicksLimit: 10
-                },
-                stacked: true,
-                gridLines: {
-                  color: "rgb(0,0,0,0)"
-                }
-              }
-            ],
-            yAxes: [
-              {
-                stacked: true,
-                gridLines: {
-                  color: "rgb(0,0,0,0.1)"
-                },
-                ticks: {
-                  precision: 0,
-                  suggestedMin: 0,
-                  // callback: (value) => {
-                  //   return utils.getFormattedNumber(value);
-                  // }
-                }
-              }
-            ]
-          }
         };
       }
     }

@@ -238,6 +238,102 @@ func (q *Queries) GetIssueCountByFilters(ctx context.Context, arg GetIssueCountB
 	return issue_count, err
 }
 
+const getUserWiseIssueContributionByFilters = `-- name: GetUserWiseIssueContributionByFilters :many
+WITH CoreData AS (
+    SELECT
+        COUNT(DISTINCT i.id) AS issue_count,
+        DATE(i.github_updated_at) AS updated_date,
+        coll.login 
+    FROM
+        public.repositories r
+    JOIN
+        public.repository_collaborators rc ON r.id = rc.repo_id
+    JOIN
+        public.organization_collaborators oc ON rc.organization_collaborator_id = oc.id
+    JOIN
+        public.organizations org ON oc.organization_id = org.id
+    LEFT JOIN
+        public.issues i ON rc.id = i.repository_collaborators_id
+    LEFT JOIN
+        public.pull_requests pr ON rc.id = pr.repository_collaborators_id
+    LEFT JOIN
+        public.assignees a ON (i.id = a.issue_id OR pr.id = a.pr_id)
+    LEFT JOIN
+        public.collaborators coll ON a.collaborator_id = coll.id
+    WHERE
+        (i.github_updated_at BETWEEN $1 AND $2)   
+        AND coll.id = ANY(string_to_array($3, ','))
+        AND org.id = ANY(string_to_array($4, ','))
+        AND r.id = ANY(string_to_array($5, ','))
+    GROUP BY updated_date, coll.login  
+    ORDER BY updated_date DESC
+),
+DateSeries AS (
+    SELECT user_date::date, login
+    FROM (
+        SELECT generate_series((SELECT min(updated_date) - interval '1 day' FROM CoreData), 
+                               (SELECT max(updated_date) + interval '1 day' FROM CoreData), 
+                               interval '1 day') AS user_date
+    ) x
+    CROSS JOIN (
+        SELECT DISTINCT login
+        FROM CoreData
+        WHERE login IS NOT NULL
+    ) y
+)
+SELECT 
+    ds.user_date, 
+    ds.login, 
+    COALESCE(cd.issue_count, 0) AS issue_count 
+FROM 
+    DateSeries ds 
+LEFT JOIN 
+    CoreData cd ON ds.user_date = cd.updated_date AND cd.login = ds.login
+`
+
+type GetUserWiseIssueContributionByFiltersParams struct {
+	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
+	StringToArray     string       `json:"string_to_array"`
+	StringToArray_2   string       `json:"string_to_array_2"`
+	StringToArray_3   string       `json:"string_to_array_3"`
+}
+
+type GetUserWiseIssueContributionByFiltersRow struct {
+	UserDate   time.Time      `json:"user_date"`
+	Login      sql.NullString `json:"login"`
+	IssueCount int64          `json:"issue_count"`
+}
+
+func (q *Queries) GetUserWiseIssueContributionByFilters(ctx context.Context, arg GetUserWiseIssueContributionByFiltersParams) ([]GetUserWiseIssueContributionByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserWiseIssueContributionByFilters,
+		arg.GithubUpdatedAt,
+		arg.GithubUpdatedAt_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetUserWiseIssueContributionByFiltersRow
+	for rows.Next() {
+		var i GetUserWiseIssueContributionByFiltersRow
+		if err := rows.Scan(&i.UserDate, &i.Login, &i.IssueCount); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const insertIssue = `-- name: InsertIssue :one
 INSERT INTO
     "issues" (

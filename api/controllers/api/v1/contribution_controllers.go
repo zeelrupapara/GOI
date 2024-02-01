@@ -3,6 +3,7 @@ package v1
 import (
 	"database/sql"
 	"encoding/json"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -37,6 +38,16 @@ type PageInfo struct {
 type ContributionsDetailsRes struct {
 	Details  []ContributionsDetails `json:"details"`
 	PageInfo PageInfo               `json:"page_info"`
+}
+
+type UserPrCount struct {
+	User  string `json:"user"`
+	Count int64  `json:"count"`
+}
+
+type DateWisePrContributision struct {
+	Date time.Time     `json:"date"`
+	Data []UserPrCount `json:"data"`
 }
 
 func NewContributionController(db *sql.DB, logger *zap.Logger) (*ContributionControllers, error) {
@@ -200,7 +211,7 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 	}
 
 	// Get Pull Request Contribution
-	pullRequestContributions, err := ctrl.model.GetPullRequestContributionByFilters(c.Context(), models.GetPullRequestContributionByFiltersParams{
+	pullRequestContributions, err := ctrl.model.GetUserWisePullRequestContributionByFilters(c.Context(), models.GetUserWisePullRequestContributionByFiltersParams{
 		GithubUpdatedAt:   sql.NullTime{Time: from, Valid: true},
 		GithubUpdatedAt_2: sql.NullTime{Time: to, Valid: true},
 		StringToArray:     membersStrings,
@@ -210,7 +221,32 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetPullRequestContributions)
 	}
-	return utils.JSONSuccess(c, 200, pullRequestContributions)
+
+	dateWisePrContributionOutput := make(map[time.Time]*DateWisePrContributision)
+
+	for _, pullRequestContribution := range pullRequestContributions {
+		if _, ok := dateWisePrContributionOutput[pullRequestContribution.UserDate]; !ok {
+			dateWisePrContributionOutput[pullRequestContribution.UserDate] = &DateWisePrContributision{
+				Date: pullRequestContribution.UserDate,
+				Data: make([]UserPrCount, 0),
+			}
+		}
+		dateWisePrContributionOutput[pullRequestContribution.UserDate].Data = append(dateWisePrContributionOutput[pullRequestContribution.UserDate].Data, UserPrCount{
+			User:  utils.SqlNullString(pullRequestContribution.Login),
+			Count: pullRequestContribution.PrCount,
+		})
+	}
+
+	dateWiseUserPrContributionRes := make([]DateWisePrContributision, 0, len(dateWisePrContributionOutput))
+	for _, value := range dateWisePrContributionOutput {
+		dateWiseUserPrContributionRes = append(dateWiseUserPrContributionRes, *value)
+	}
+
+	sort.Slice(dateWiseUserPrContributionRes, func(i, j int) bool {
+		return dateWiseUserPrContributionRes[i].Date.Before(dateWiseUserPrContributionRes[j].Date)
+	})
+
+	return utils.JSONSuccess(c, 200, dateWiseUserPrContributionRes)
 }
 
 func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
@@ -283,7 +319,7 @@ func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 	}
 
 	// Get Issue Contribution
-	issueContributions, err := ctrl.model.GetIssueContributionByFilters(c.Context(), models.GetIssueContributionByFiltersParams{
+	issueRequestContributions, err := ctrl.model.GetUserWiseIssueContributionByFilters(c.Context(), models.GetUserWiseIssueContributionByFiltersParams{
 		GithubUpdatedAt:   sql.NullTime{Time: from, Valid: true},
 		GithubUpdatedAt_2: sql.NullTime{Time: to, Valid: true},
 		StringToArray:     membersStrings,
@@ -293,7 +329,32 @@ func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 	if err != nil {
 		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
 	}
-	return utils.JSONSuccess(c, 200, issueContributions)
+
+	dateWiseIssueContributionOutput := make(map[time.Time]*DateWisePrContributision)
+
+	for _, issueRequestContribution := range issueRequestContributions {
+		if _, ok := dateWiseIssueContributionOutput[issueRequestContribution.UserDate]; !ok {
+			dateWiseIssueContributionOutput[issueRequestContribution.UserDate] = &DateWisePrContributision{
+				Date: issueRequestContribution.UserDate,
+				Data: make([]UserPrCount, 0),
+			}
+		}
+		dateWiseIssueContributionOutput[issueRequestContribution.UserDate].Data = append(dateWiseIssueContributionOutput[issueRequestContribution.UserDate].Data, UserPrCount{
+			User:  utils.SqlNullString(issueRequestContribution.Login),
+			Count: issueRequestContribution.IssueCount,
+		})
+	}
+
+	dateWiseUserIssueContributionRes := make([]DateWisePrContributision, 0, len(dateWiseIssueContributionOutput))
+	for _, value := range dateWiseIssueContributionOutput {
+		dateWiseUserIssueContributionRes = append(dateWiseUserIssueContributionRes, *value)
+	}
+
+	sort.Slice(dateWiseUserIssueContributionRes, func(i, j int) bool {
+		return dateWiseUserIssueContributionRes[i].Date.Before(dateWiseUserIssueContributionRes[j].Date)
+	})
+
+	return utils.JSONSuccess(c, 200, dateWiseUserIssueContributionRes)
 }
 
 func (ctrl *ContributionControllers) GetPullRequestContributionInDetailsByFilters(c *fiber.Ctx) error {
