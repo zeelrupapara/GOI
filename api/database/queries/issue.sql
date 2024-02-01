@@ -133,6 +133,7 @@ WITH CoreData AS (
         AND coll.id = ANY(string_to_array($3, ','))
         AND org.id = ANY(string_to_array($4, ','))
         AND r.id = ANY(string_to_array($5, ','))
+        AND i.status = $6
     GROUP BY updated_date, coll.login  
     ORDER BY updated_date DESC
 ),

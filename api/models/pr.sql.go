@@ -274,6 +274,7 @@ WITH CoreData AS (
         AND coll.id = ANY(string_to_array($3, ','))
         AND org.id = ANY(string_to_array($4, ','))
         AND r.id = ANY(string_to_array($5, ','))
+        AND pr.status = $6
     GROUP BY updated_date, coll.login  
     ORDER BY updated_date DESC
 ),
@@ -301,11 +302,12 @@ LEFT JOIN
 `
 
 type GetUserWisePullRequestContributionByFiltersParams struct {
-	GithubUpdatedAt   sql.NullTime `json:"github_updated_at"`
-	GithubUpdatedAt_2 sql.NullTime `json:"github_updated_at_2"`
-	StringToArray     string       `json:"string_to_array"`
-	StringToArray_2   string       `json:"string_to_array_2"`
-	StringToArray_3   string       `json:"string_to_array_3"`
+	GithubUpdatedAt   sql.NullTime   `json:"github_updated_at"`
+	GithubUpdatedAt_2 sql.NullTime   `json:"github_updated_at_2"`
+	StringToArray     string         `json:"string_to_array"`
+	StringToArray_2   string         `json:"string_to_array_2"`
+	StringToArray_3   string         `json:"string_to_array_3"`
+	Status            sql.NullString `json:"status"`
 }
 
 type GetUserWisePullRequestContributionByFiltersRow struct {
@@ -321,6 +323,7 @@ func (q *Queries) GetUserWisePullRequestContributionByFilters(ctx context.Contex
 		arg.StringToArray,
 		arg.StringToArray_2,
 		arg.StringToArray_3,
+		arg.Status,
 	)
 	if err != nil {
 		return nil, err

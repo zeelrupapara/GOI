@@ -4,6 +4,9 @@ package constants
 const (
 	DateTimeFormat string = "2006-01-02T15:04:05Z"
 	PAGINATION_LIMIT int32 = 5
+	OPEN_STATUS string = "OPEN"
+	CLOSED_STATUS string = "CLOSED"
+	MERGED_STATUS string = "MERGED"
 )
 
 // fiber contexts
@@ -12,6 +15,7 @@ const ()
 // params
 const (
 	ParamOid string = "OrgID"
+	ParamStatus string = "Status"
 )
 
 // query params
@@ -49,4 +53,5 @@ const (
 	ErrGetIssueContributions = "Unable to get issue contributions"
 	ErrGetPullRequestContributionInDetailsByFilters = "Unable to get pull request contribution in details by filters"
 	ErrGetIssueContributionsInDetailsByFilters = "Unable to get issue contribution in details by filters"
+	ErrNoStatusDefine = "No status defined"
 )
