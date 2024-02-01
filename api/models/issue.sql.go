@@ -124,6 +124,7 @@ WHERE
     AND coll.id = ANY(string_to_array($3, ','))
     AND org.id = ANY(string_to_array($4, ','))
     AND r.id = ANY(string_to_array($5, ','))
+    AND i.status = ANY(string_to_array($8, ','))
 ORDER BY i.github_updated_at DESC LIMIT $6 OFFSET $7
 `
 
@@ -135,6 +136,7 @@ type GetIssueContributionDetailsByFiltersParams struct {
 	StringToArray_3   string       `json:"string_to_array_3"`
 	Limit             int32        `json:"limit"`
 	Offset            int32        `json:"offset"`
+	StringToArray_4   string       `json:"string_to_array_4"`
 }
 
 type GetIssueContributionDetailsByFiltersRow struct {
@@ -157,6 +159,7 @@ func (q *Queries) GetIssueContributionDetailsByFilters(ctx context.Context, arg 
 		arg.StringToArray_3,
 		arg.Limit,
 		arg.Offset,
+		arg.StringToArray_4,
 	)
 	if err != nil {
 		return nil, err

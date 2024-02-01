@@ -123,6 +123,7 @@ WHERE
     AND coll.id = ANY(string_to_array($3, ','))
     AND org.id = ANY(string_to_array($4, ','))
     AND r.id = ANY(string_to_array($5, ','))
+    AND pr.status = ANY(string_to_array($8, ','))
 ORDER BY pr.github_updated_at DESC LIMIT $6 OFFSET $7;
 
 -- name: GetUserWisePullRequestContributionByFilters :many

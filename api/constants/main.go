@@ -27,6 +27,8 @@ const (
 	TO string = "to"
 	PR_PAGE_NUMBER string = "pr_page"
 	ISSUE_PAGE_NUMBER string = "issue_page"
+	PR_STATUS string = "pr_status"
+	ISSUE_STATUS string = "issue_status"
 )
 
 // Success messages

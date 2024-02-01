@@ -1,8 +1,8 @@
 
 <template>
   <div>
-    <WidgetTableCard table-name="PR" :table-title="pullRequestTableTitle" :table-details="pullRequestTableDetails" :page-info="pullRequestPaginationInfo" />
-    <WidgetTableCard table-name="Issue" :table-title="issueTableTitle" :table-details="issueTableDetails" :page-info="issuePaginationInfo" />
+    <WidgetTableCard table-name="PR" :table-title="pullRequestTableTitle" :table-details="pullRequestTableDetails" :page-info="pullRequestPaginationInfo" :selected-status="pullRequestSelectedStatus" />
+    <WidgetTableCard table-name="Issue" :table-title="issueTableTitle" :table-details="issueTableDetails" :page-info="issuePaginationInfo" :selected-status="issueSelectedStatus" />
   </div>
 </template>
 
@@ -16,12 +16,14 @@ export default {
     return {
       pullRequestTableTitle: "Pull Request Contribution",
       pullRequestTableDetails: [],
+      pullRequestSelectedStatus: null,
       pullRequestPaginationInfo: {
         previous: false,
         next: false
       },
       issueTableTitle: "Issue Contribution",
       issueTableDetails: [],
+      issueSelectedStatus: null,
       issuePaginationInfo: {
         previous: false,
         next: false
@@ -33,12 +35,35 @@ export default {
       async handler(newValue){
         await this.getPullRequestContributionTableDeatils();
         await this.getIssueContributionTableDetails();
+        if (newValue.pr_status){
+          this.pullRequestSelectedStatus = newValue.pr_status
+        }else{
+          this.pullRequestSelectedStatus = null
+        }
+
+        if (newValue.issue_status){
+          this.issueSelectedStatus = newValue.issue_status
+        }else{
+          this.issueSelectedStatus = null
+        }
       }
     }
    },
    async mounted(){
     await this.getPullRequestContributionTableDeatils();
     await this.getIssueContributionTableDetails();
+
+    if (this.$route.query.pr_status){
+      this.pullRequestSelectedStatus = this.$route.query.pr_status
+    }else{
+      this.pullRequestSelectedStatus = null
+    }
+
+    if (this.$route.query.issue_status){
+      this.issueSelectedStatus = this.$route.query.issue_status
+    }else{
+      this.issueSelectedStatus = null
+    }
    },
    methods:{
     async getPullRequestContributionTableDeatils(){
