@@ -83,16 +83,29 @@ export default {
         previous: false,
         next: false
       }
+    },
+    selectedStatus:{
+      type: String,
+      default: null
     }
   },
   data(){
     return{
-      selectedStatus: null,
       statusOptions: []
     }
   },
   created(){
     this.setStatusFilterOptions();
+  },
+  watch:{
+    "$route.query":{
+      handler(){
+        const queryParams = { ...this.$route.query };
+        if (!queryParams.pr_status){
+          this.selectedStatus
+        }
+      }
+    }
   },
   methods:{
     getShortString(str){
