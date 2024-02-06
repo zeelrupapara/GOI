@@ -56,3 +56,26 @@ FROM
     DateSeries ds 
 LEFT JOIN 
     CoreData cd ON ds.commit_date = cd.commit_date AND cd.username = ds.username;
+
+-- name: GetRepoWiseCommitContributionDetailsByFilters :many
+SELECT distinct 
+    coll.login as commiter,
+    r.name as repository,
+    b.name as branch,
+    o.login as organization,
+    count(distinct c.id) as commits,
+    date(c.github_committed_time) as commit_date
+FROM commits c 
+JOIN branches b on b.id = c.branch_id 
+JOIN repositories r on r.id = b.repository_id
+JOIN repository_collaborators rc on rc.repo_id = r.id 
+JOIN organization_collaborators oc on oc.id = rc.organization_collaborator_id 
+JOIN organizations o on o.id = oc.organization_id 
+JOIN collaborators coll on coll.id = c.author_id  
+WHERE (c.github_committed_time between $1 and $2)
+    AND b.is_default = true
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND o.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+GROUP BY coll.login, date(c.github_committed_time), r.name, b.name ,o.login
+ORDER BY commit_date DESC LIMIT $6 OFFSET $7;

@@ -27,6 +27,87 @@ func (q *Queries) GetCommitByID(ctx context.Context, arg GetCommitByIDParams) (s
 	return id, err
 }
 
+const getRepoWiseCommitContributionDetailsByFilters = `-- name: GetRepoWiseCommitContributionDetailsByFilters :many
+SELECT distinct 
+    coll.login as commiter,
+    r.name as repository,
+    b.name as branch,
+    o.login as organization,
+    count(distinct c.id) as commits,
+    date(c.github_committed_time) as commit_date
+FROM commits c 
+JOIN branches b on b.id = c.branch_id 
+JOIN repositories r on r.id = b.repository_id
+JOIN repository_collaborators rc on rc.repo_id = r.id 
+JOIN organization_collaborators oc on oc.id = rc.organization_collaborator_id 
+JOIN organizations o on o.id = oc.organization_id 
+JOIN collaborators coll on coll.id = c.author_id  
+WHERE (c.github_committed_time between $1 and $2)
+    AND b.is_default = true
+    AND coll.id = ANY(string_to_array($3, ','))
+    AND o.id = ANY(string_to_array($4, ','))
+    AND r.id = ANY(string_to_array($5, ','))
+GROUP BY coll.login, date(c.github_committed_time), r.name, b.name ,o.login
+ORDER BY commit_date DESC LIMIT $6 OFFSET $7
+`
+
+type GetRepoWiseCommitContributionDetailsByFiltersParams struct {
+	GithubCommittedTime   sql.NullTime `json:"github_committed_time"`
+	GithubCommittedTime_2 sql.NullTime `json:"github_committed_time_2"`
+	StringToArray         string       `json:"string_to_array"`
+	StringToArray_2       string       `json:"string_to_array_2"`
+	StringToArray_3       string       `json:"string_to_array_3"`
+	Limit                 int32        `json:"limit"`
+	Offset                int32        `json:"offset"`
+}
+
+type GetRepoWiseCommitContributionDetailsByFiltersRow struct {
+	Commiter     string         `json:"commiter"`
+	Repository   sql.NullString `json:"repository"`
+	Branch       string         `json:"branch"`
+	Organization string         `json:"organization"`
+	Commits      int64          `json:"commits"`
+	CommitDate   time.Time      `json:"commit_date"`
+}
+
+func (q *Queries) GetRepoWiseCommitContributionDetailsByFilters(ctx context.Context, arg GetRepoWiseCommitContributionDetailsByFiltersParams) ([]GetRepoWiseCommitContributionDetailsByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getRepoWiseCommitContributionDetailsByFilters,
+		arg.GithubCommittedTime,
+		arg.GithubCommittedTime_2,
+		arg.StringToArray,
+		arg.StringToArray_2,
+		arg.StringToArray_3,
+		arg.Limit,
+		arg.Offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetRepoWiseCommitContributionDetailsByFiltersRow
+	for rows.Next() {
+		var i GetRepoWiseCommitContributionDetailsByFiltersRow
+		if err := rows.Scan(
+			&i.Commiter,
+			&i.Repository,
+			&i.Branch,
+			&i.Organization,
+			&i.Commits,
+			&i.CommitDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUserWiseCommitContributionCount = `-- name: GetUserWiseCommitContributionCount :many
 WITH CoreData AS (
 SELECT distinct 

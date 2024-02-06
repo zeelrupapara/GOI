@@ -87,5 +87,6 @@ func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logge
 	contributionRouter.Get("/commit", contributionController.GetCommitContributions)
 	contributionRouter.Get("/pullrequest/details", contributionController.GetPullRequestContributionInDetailsByFilters)
 	contributionRouter.Get("/issue/details", contributionController.GetIssueContributionInDetailsByFilters)
+	contributionRouter.Get("/commit/details", contributionController.GetCommitContributionsDetailsByFilters)
 	return nil
 }

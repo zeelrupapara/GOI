@@ -30,6 +30,14 @@ type ContributionsDetails struct {
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+type CommitContributionDetails struct {
+	Repository   string    `json:"repository"`
+	Branch       string    `json:"branch"`
+	CommitCount  int       `json:"commit_count"`
+	Organization string    `json:"organization"`
+	Date         time.Time `json:"date"`
+}
+
 type PageInfo struct {
 	Previuos bool `json:"previous"`
 	Next     bool `json:"next"`
@@ -38,6 +46,11 @@ type PageInfo struct {
 type ContributionsDetailsRes struct {
 	Details  []ContributionsDetails `json:"details"`
 	PageInfo PageInfo               `json:"page_info"`
+}
+
+type CommitContributionDetailsRes struct {
+	Details  []CommitContributionDetails `json:"details"`
+	PageInfo PageInfo                    `json:"page_info"`
 }
 
 type UserPrCount struct {
@@ -662,7 +675,7 @@ func (ctrl *ContributionControllers) GetCommitContributions(c *fiber.Ctx) error 
 	if orgsQP == "" {
 		orgs, err = ctrl.model.GetOrganizationIDs(c.Context())
 		if err != nil {
-			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+			return utils.JSONError(c, 400, constants.ErrGetUserWiseCommitContribution)
 		}
 	} else {
 		err = json.Unmarshal([]byte(orgsQP), &orgs)
@@ -756,4 +769,126 @@ func (ctrl *ContributionControllers) GetCommitContributions(c *fiber.Ctx) error 
 	})
 
 	return utils.JSONSuccess(c, 200, dateWiseCommitContributionOutput)
+}
+
+func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *fiber.Ctx) error {
+	var orgs []string
+	var repos []string
+	var members []string
+	var from time.Time
+	var to time.Time
+	var page int32
+	var hasPreviousPage bool = true
+	var hasNextPage bool = true
+
+	// get orgs
+	orgsQP := c.Query(constants.ORG_QP)
+	if orgsQP == "" {
+		orgs, err = ctrl.model.GetOrganizationIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	} else {
+		err = json.Unmarshal([]byte(orgsQP), &orgs)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	}
+	orgStrings := strings.Join(orgs, ",")
+
+	// get repos
+	reposQP := c.Query(constants.REPO_QP)
+	if reposQP == "" {
+		repos, err = ctrl.model.GetRepoIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	} else {
+		err = json.Unmarshal([]byte(reposQP), &repos)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	}
+	reposStrings := strings.Join(repos, ",")
+
+	// get membs
+	membsQP := c.Query(constants.MEMBER_QP)
+	if membsQP == "" {
+		members, err = ctrl.model.GetMemberIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	} else {
+		err = json.Unmarshal([]byte(membsQP), &members)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	}
+	membersStrings := strings.Join(members, ",")
+
+	// get the from and to
+	fromQP := c.Query(constants.FROM)
+	toQP := c.Query(constants.TO)
+	if fromQP == "" || toQP == "" {
+		// get the 1 week data from the utils
+		to, from = utils.GetWeekTimestamps()
+	} else {
+		from, err = utils.ConvertEpochToTime(fromQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+		to, err = utils.ConvertEpochToTime(toQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+	}
+
+	// Get Page Number
+	pageQP := c.Query(constants.COMMIT_PAGE_NUMBER)
+	if pageQP == "" {
+		page = 1
+	} else {
+		pageInt, err := strconv.ParseInt(pageQP, 10, 32)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+		}
+		page = int32(pageInt)
+	}
+
+	// Get PullRequest Contribution
+	commitContributionDetails, err := ctrl.model.GetRepoWiseCommitContributionDetailsByFilters(c.Context(), models.GetRepoWiseCommitContributionDetailsByFiltersParams{
+		GithubCommittedTime:   sql.NullTime{Time: from, Valid: true},
+		GithubCommittedTime_2: sql.NullTime{Time: to, Valid: true},
+		StringToArray:         membersStrings,
+		StringToArray_2:       orgStrings,
+		StringToArray_3:       reposStrings,
+		Limit:                 constants.PAGINATION_LIMIT,
+		Offset:                constants.PAGINATION_LIMIT * (page - 1),
+	})
+	if err != nil {
+		return utils.JSONError(c, 400, constants.ErrGetCommitContributionDetailsByFilters)
+	}
+	commitContributionDetailStructure := []CommitContributionDetails{}
+	for _, commitContributionDeatils := range commitContributionDetails {
+		commitContributionDetailStructure = append(commitContributionDetailStructure, CommitContributionDetails{
+			Repository:   utils.SqlNullString(commitContributionDeatils.Repository),
+			Branch:       commitContributionDeatils.Branch,
+			CommitCount:  int(commitContributionDeatils.Commits),
+			Organization: commitContributionDeatils.Organization,
+			Date:         commitContributionDeatils.CommitDate,
+		})
+	}
+
+	if page <= 1 {
+		hasPreviousPage = false
+	}
+	if len(commitContributionDetails) < int(constants.PAGINATION_LIMIT) {
+		hasNextPage = false
+	}
+
+	commitContributionDetailsRes := CommitContributionDetailsRes{
+		Details:  commitContributionDetailStructure,
+		PageInfo: PageInfo{Previuos: hasPreviousPage, Next: hasNextPage},
+	}
+	return utils.JSONSuccess(c, 200, commitContributionDetailsRes)
 }
