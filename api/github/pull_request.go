@@ -510,7 +510,10 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 									return err
 								}
 							}
-							_, err = github.model.GetCommitByID(github.ctx, commit.Commit.ID)
+							_, err = github.model.GetCommitByID(github.ctx, models.GetCommitByIDParams{
+								ID:       commit.Commit.ID,
+								BranchID: branchID,
+							})
 							if err != nil {
 								if err == sql.ErrNoRows {
 									github.model.InsertCommit(github.ctx, models.InsertCommitParams{

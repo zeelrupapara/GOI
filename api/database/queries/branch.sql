@@ -3,7 +3,7 @@ INSERT INTO
     "branches" (
         "id",
         "name",
-        "url",
+        "is_default",
         "repository_id"
     )
 VALUES ($1, $2, $3, $4) RETURNING branches.id;
