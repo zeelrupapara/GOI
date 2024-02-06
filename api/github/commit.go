@@ -4,10 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
+
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
 	"go.uber.org/zap"
-	"time"
 
 	"github.com/Improwised/GPAT/constants"
 	"github.com/shurcooL/githubv4"
@@ -150,13 +151,14 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs, st
 							return err
 						}
 						_, err = github.model.GetCommitByID(github.ctx, models.GetCommitByIDParams{
-							ID:       repoCommit.ID,
+							HashID:   repoCommit.ID,
 							BranchID: branchID,
 						})
 						if err != nil {
 							if err == sql.ErrNoRows {
 								_, err := github.model.InsertCommit(github.ctx, models.InsertCommitParams{
-									ID:                  repoCommit.ID,
+									ID:                  utils.GenerateUUID(),
+									HashID:              repoCommit.ID,
 									Message:             sql.NullString{String: repoCommit.Message, Valid: true},
 									BranchID:            branchID,
 									AuthorID:            committerID,

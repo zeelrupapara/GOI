@@ -45,7 +45,7 @@ type UserPrCount struct {
 	Count int64  `json:"count"`
 }
 
-type DateWisePrContributision struct {
+type DateWiseContributision struct {
 	Date time.Time     `json:"date"`
 	Data []UserPrCount `json:"data"`
 }
@@ -233,11 +233,11 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 		return utils.JSONError(c, 400, constants.ErrGetPullRequestContributions)
 	}
 
-	dateWisePrContributionOutput := make(map[time.Time]*DateWisePrContributision)
+	dateWisePrContributionOutput := make(map[time.Time]*DateWiseContributision)
 
 	for _, pullRequestContribution := range pullRequestContributions {
 		if _, ok := dateWisePrContributionOutput[pullRequestContribution.UserDate]; !ok {
-			dateWisePrContributionOutput[pullRequestContribution.UserDate] = &DateWisePrContributision{
+			dateWisePrContributionOutput[pullRequestContribution.UserDate] = &DateWiseContributision{
 				Date: pullRequestContribution.UserDate,
 				Data: make([]UserPrCount, 0),
 			}
@@ -248,7 +248,7 @@ func (ctrl *ContributionControllers) GetPullRequestContributions(c *fiber.Ctx) e
 		})
 	}
 
-	dateWiseUserPrContributionRes := make([]DateWisePrContributision, 0, len(dateWisePrContributionOutput))
+	dateWiseUserPrContributionRes := make([]DateWiseContributision, 0, len(dateWisePrContributionOutput))
 	for _, value := range dateWisePrContributionOutput {
 		dateWiseUserPrContributionRes = append(dateWiseUserPrContributionRes, *value)
 	}
@@ -352,11 +352,11 @@ func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
 	}
 
-	dateWiseIssueContributionOutput := make(map[time.Time]*DateWisePrContributision)
+	dateWiseIssueContributionOutput := make(map[time.Time]*DateWiseContributision)
 
 	for _, issueRequestContribution := range issueRequestContributions {
 		if _, ok := dateWiseIssueContributionOutput[issueRequestContribution.UserDate]; !ok {
-			dateWiseIssueContributionOutput[issueRequestContribution.UserDate] = &DateWisePrContributision{
+			dateWiseIssueContributionOutput[issueRequestContribution.UserDate] = &DateWiseContributision{
 				Date: issueRequestContribution.UserDate,
 				Data: make([]UserPrCount, 0),
 			}
@@ -367,7 +367,7 @@ func (ctrl *ContributionControllers) GetIssueContributions(c *fiber.Ctx) error {
 		})
 	}
 
-	dateWiseUserIssueContributionRes := make([]DateWisePrContributision, 0, len(dateWiseIssueContributionOutput))
+	dateWiseUserIssueContributionRes := make([]DateWiseContributision, 0, len(dateWiseIssueContributionOutput))
 	for _, value := range dateWiseIssueContributionOutput {
 		dateWiseUserIssueContributionRes = append(dateWiseUserIssueContributionRes, *value)
 	}
@@ -647,4 +647,113 @@ func (ctrl *ContributionControllers) GetIssueContributionInDetailsByFilters(c *f
 		PageInfo: PageInfo{Previuos: hasPreviousPage, Next: hasNextPage},
 	}
 	return utils.JSONSuccess(c, 200, issueContributionsDetailsRes)
+}
+
+// Get Count of User Wise Issue by Status
+func (ctrl *ContributionControllers) GetCommitContributions(c *fiber.Ctx) error {
+	var orgs []string
+	var repos []string
+	var members []string
+	var from time.Time
+	var to time.Time
+
+	// get orgs
+	orgsQP := c.Query(constants.ORG_QP)
+	if orgsQP == "" {
+		orgs, err = ctrl.model.GetOrganizationIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	} else {
+		err = json.Unmarshal([]byte(orgsQP), &orgs)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	}
+	orgStrings := strings.Join(orgs, ",")
+
+	// get repos
+	reposQP := c.Query(constants.REPO_QP)
+	if reposQP == "" {
+		repos, err = ctrl.model.GetRepoIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	} else {
+		err = json.Unmarshal([]byte(reposQP), &repos)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	}
+	reposStrings := strings.Join(repos, ",")
+
+	// get membs
+	membsQP := c.Query(constants.MEMBER_QP)
+	if membsQP == "" {
+		members, err = ctrl.model.GetMemberIDs(c.Context())
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	} else {
+		err = json.Unmarshal([]byte(membsQP), &members)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	}
+	membersStrings := strings.Join(members, ",")
+
+	// get the from and to
+	fromQP := c.Query(constants.FROM)
+	toQP := c.Query(constants.TO)
+	if fromQP == "" || toQP == "" {
+		// get the 1 week data from the utils
+		to, from = utils.GetWeekTimestamps()
+	} else {
+		from, err = utils.ConvertEpochToTime(fromQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+		to, err = utils.ConvertEpochToTime(toQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+		}
+	}
+
+	// Get Issue Contribution
+	CommitContributions, err := ctrl.model.GetUserWiseCommitContributionCount(c.Context(), models.GetUserWiseCommitContributionCountParams{
+		GithubCommittedTime:   sql.NullTime{Time: from, Valid: true},
+		GithubCommittedTime_2: sql.NullTime{Time: to, Valid: true},
+		StringToArray:         membersStrings,
+		StringToArray_2:       orgStrings,
+		StringToArray_3:       reposStrings,
+	})
+	if err != nil {
+		return utils.JSONError(c, 400, constants.ErrGetIssueContributions)
+	}
+
+	dateWiseCommitContributionOutput := make(map[time.Time]*DateWiseContributision)
+
+	for _, commitContribution := range CommitContributions {
+		if _, ok := dateWiseCommitContributionOutput[commitContribution.CommitDate]; !ok {
+			dateWiseCommitContributionOutput[commitContribution.CommitDate] = &DateWiseContributision{
+				Date: commitContribution.CommitDate,
+				Data: make([]UserPrCount, 0),
+			}
+		}
+		dateWiseCommitContributionOutput[commitContribution.CommitDate].Data = append(dateWiseCommitContributionOutput[commitContribution.CommitDate].Data, UserPrCount{
+			User:  commitContribution.Username,
+			Count: commitContribution.TotalCommit,
+		})
+	}
+
+	dateWiseCommitContributionRes := make([]DateWiseContributision, 0, len(dateWiseCommitContributionOutput))
+	for _, value := range dateWiseCommitContributionOutput {
+		dateWiseCommitContributionRes = append(dateWiseCommitContributionRes, *value)
+	}
+
+	sort.Slice(dateWiseCommitContributionRes, func(i, j int) bool {
+		return dateWiseCommitContributionRes[i].Date.Before(dateWiseCommitContributionRes[j].Date)
+	})
+
+	return utils.JSONSuccess(c, 200, dateWiseCommitContributionOutput)
 }

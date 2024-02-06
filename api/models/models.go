@@ -59,6 +59,7 @@ type Collaborator struct {
 
 type Commit struct {
 	ID                  string         `json:"id"`
+	HashID              string         `json:"hash_id"`
 	Message             sql.NullString `json:"message"`
 	BranchID            string         `json:"branch_id"`
 	PrID                sql.NullString `json:"pr_id"`
