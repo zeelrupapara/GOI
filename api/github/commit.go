@@ -160,9 +160,9 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs, st
 									Message:             sql.NullString{String: repoCommit.Message, Valid: true},
 									BranchID:            branchID,
 									AuthorID:            committerID,
-									Url:                 sql.NullString{String: repoCommit.URL},
-									CommitUrl:           sql.NullString{String: repoCommit.CommitUrl},
-									GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate},
+									Url:                 sql.NullString{String: repoCommit.URL, Valid: true},
+									CommitUrl:           sql.NullString{String: repoCommit.CommitUrl, Valid: true},
+									GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate, Valid: true},
 								})
 								if err != nil {
 									github.CommitLog(ERROR, err)
