@@ -15,6 +15,24 @@ import (
 	"go.uber.org/zap"
 )
 
+type CommitHistory struct {
+	Username      string    `json:"username"`
+	Repository    string    `json:"repository"`
+	Organization  string    `json:"organization"`
+	CommitMessage string    `json:"commit_message"`
+	CommittedDate time.Time `json:"committed_date"`
+}
+
+type CommitHistoryRes struct {
+	Login         string          `json:"login"`
+	Url           string          `json:"url"`
+	AvatarUrl     string          `json:"avatar_url"`
+	Email         string          `json:"email"`
+	StartTime     time.Time       `json:"start_time"`
+	EndTime       time.Time       `json:"end_time"`
+	CommitHistory []CommitHistory `json:"commit_history"`
+}
+
 type ContributionControllers struct {
 	model *models.Queries
 }
@@ -33,6 +51,7 @@ type ContributionsDetails struct {
 type CommitContributionDetails struct {
 	Repository   string    `json:"repository"`
 	Branch       string    `json:"branch"`
+	Committer    string    `json:"committer"`
 	CommitCount  int       `json:"commit_count"`
 	Organization string    `json:"organization"`
 	Date         time.Time `json:"date"`
@@ -768,7 +787,7 @@ func (ctrl *ContributionControllers) GetCommitContributions(c *fiber.Ctx) error 
 		return dateWiseCommitContributionRes[i].Date.Before(dateWiseCommitContributionRes[j].Date)
 	})
 
-	return utils.JSONSuccess(c, 200, dateWiseCommitContributionOutput)
+	return utils.JSONSuccess(c, 200, dateWiseCommitContributionRes)
 }
 
 func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *fiber.Ctx) error {
@@ -873,6 +892,7 @@ func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *f
 		commitContributionDetailStructure = append(commitContributionDetailStructure, CommitContributionDetails{
 			Repository:   utils.SqlNullString(commitContributionDeatils.Repository),
 			Branch:       commitContributionDeatils.Branch,
+			Committer:    commitContributionDeatils.Commiter,
 			CommitCount:  int(commitContributionDeatils.Commits),
 			Organization: commitContributionDeatils.Organization,
 			Date:         commitContributionDeatils.CommitDate,
@@ -891,4 +911,86 @@ func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *f
 		PageInfo: PageInfo{Previuos: hasPreviousPage, Next: hasNextPage},
 	}
 	return utils.JSONSuccess(c, 200, commitContributionDetailsRes)
+}
+
+func (ctrl *ContributionControllers) GetDefultBranchCommitsByFilters(c *fiber.Ctx) error {
+	var from time.Time
+	var to time.Time
+
+	// Get Organization From Query Params
+	orgP := c.Params(constants.ParamOrg)
+	if orgP == "" {
+		return utils.JSONError(c, 400, constants.ErrNotProvideOrganization)
+	}
+
+	// Get Repository From Query Params
+	repoP := c.Params(constants.ParamRepo)
+	if repoP == "" {
+		return utils.JSONError(c, 400, constants.ErrNotProvideRepository)
+	}
+
+	// Get Members From Query Params
+	membP := c.Params(constants.ParamMember)
+	if membP == "" {
+		return utils.JSONError(c, 400, constants.ErrNotProvideMember)
+	}
+
+	// Get the From and To
+	fromQP := c.Query(constants.FROM)
+	toQP := c.Query(constants.TO)
+	if fromQP == "" || toQP == "" {
+		// get the 1 week data from the utils
+		to, from = utils.GetWeekTimestamps()
+	} else {
+		from, err = utils.ConvertEpochToTime(fromQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommits)
+		}
+		to, err = utils.ConvertEpochToTime(toQP)
+		if err != nil {
+			return utils.JSONError(c, 400, constants.ErrGetCommits)
+		}
+	}
+
+	// Get Member Details
+	memberDetails, err := ctrl.model.GetMemberDetailsByLogin(c.Context(), membP)
+	if err != nil {
+		return utils.JSONError(c, 400, constants.ErrGetCommits)
+	}
+
+	// Get the Commits
+	commits, err := ctrl.model.GetDefaultBranchCommitByFilters(c.Context(), models.GetDefaultBranchCommitByFiltersParams{
+		GithubCommittedTime:   sql.NullTime{Time: from, Valid: true},
+		GithubCommittedTime_2: sql.NullTime{Time: to, Valid: true},
+		Login:                 membP,
+		Login_2:               orgP,
+		Name:                  sql.NullString{String: repoP, Valid: true},
+	})
+	if err != nil {
+		return utils.JSONError(c, 400, constants.ErrGetCommits)
+	}
+
+	commitsHistory := []CommitHistory{}
+
+	for _, commit := range commits {
+		commitsHistory = append(commitsHistory, CommitHistory{
+			Username:      commit.Commiter,
+			Repository:    utils.SqlNullString(commit.Repository),
+			Organization:  commit.Organization,
+			CommitMessage: utils.SqlNullString(commit.Message),
+			CommittedDate: utils.SqlNullTime(commit.CommitDate),
+		})
+	}
+
+	userCommitsRes := CommitHistoryRes{
+		Login:         memberDetails.Login,
+		Url:           utils.SqlNullString(memberDetails.Url),
+		AvatarUrl:     utils.SqlNullString(memberDetails.AvatarUrl),
+		Email:         utils.SqlNullString(memberDetails.Email),
+		StartTime:     from,
+		EndTime:       to,
+		CommitHistory: commitsHistory,
+	}
+
+	return utils.JSONSuccess(c, 200, userCommitsRes)
 }

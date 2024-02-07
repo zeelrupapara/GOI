@@ -12,6 +12,9 @@ const utils = {
   },
   getFormattedTimeStamp: (timestamp) => {
     return dayjs(timestamp).format("DD/MM/YY")
+  },
+  getFormattedDateTime: (timestamp) => {
+    return dayjs(timestamp).format("DD/MM/YY HH:mm")
   }
 }
 

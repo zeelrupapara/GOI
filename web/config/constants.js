@@ -1,6 +1,7 @@
 const CONSTANTS = {
   API_URL_PREFIX: "/api/v1",
   PRODUCT_NAME: "GPAT",
+  GITHUB_URL_PREFIX: "https://github.com",
 
   // Filters
   FILTERS: {
@@ -30,7 +31,7 @@ const CONSTANTS = {
   },
 
   STATUS_CODES: {
-    100: "Continue",  
+    100: "Continue",
     101: "Switching Protocols",
     102: "Processing",
     103: "Early Hints",

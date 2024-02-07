@@ -88,5 +88,6 @@ func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logge
 	contributionRouter.Get("/pullrequest/details", contributionController.GetPullRequestContributionInDetailsByFilters)
 	contributionRouter.Get("/issue/details", contributionController.GetIssueContributionInDetailsByFilters)
 	contributionRouter.Get("/commit/details", contributionController.GetCommitContributionsDetailsByFilters)
+	contributionRouter.Get(fmt.Sprintf("/organizations/:%s/repository/:%s/member/:%s", constants.ParamOrg, constants.ParamRepo, constants.ParamMember), contributionController.GetDefultBranchCommitsByFilters)
 	return nil
 }

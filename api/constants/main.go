@@ -16,6 +16,9 @@ const ()
 const (
 	ParamOid    string = "OrgID"
 	ParamStatus string = "Status"
+	ParamOrg    string = "organization"
+	ParamRepo   string = "repository"
+	ParamMember string = "member"
 )
 
 // query params
@@ -59,4 +62,10 @@ const (
 	ErrNoStatusDefine                               = "No status defined"
 	ErrGetUserWiseCommitContribution                = "Unable to get user wise commit contribution"
 	ErrGetCommitContributionDetailsByFilters        = "Unable to get commit contribution details by filters"
+
+	// commits
+	ErrNotProvideOrganization = "Not provide organization"
+	ErrNotProvideRepository   = "Not provide repository"
+	ErrNotProvideMember       = "Not provide member"
+	ErrGetCommits             = "Unable to get commits"
 )

@@ -27,19 +27,29 @@
           :content-loaded="contentLoaded" :first-time-loaded="firstTimeLoaded" />
       </b-col>
     </b-row>
+    <b-row class="mt-2 mt-lg-3" height="100">
+      <b-col md="6">
+        <WidgetLineChart class="h-100" title="Commits" :chart-data="commitContributionData"
+          :content-loaded="contentLoaded" :first-time-loaded="firstTimeLoaded" />
+      </b-col>
+      <b-col md="6">
+        <WidgetQuickTableCard class="h-100" title="Merged Pull Request" :page-info="commitsPageInfo" :table-details="repoWiseCommitCountDetails" table-title="Commit Details" />
+      </b-col>
+    </b-row>
   </div>
 </template>
 
 <script>
 import WidgetPieChart from '~/components/widgets/WidgetPieChart.vue';
 import WidgetLineChart from '~/components/widgets/WidgetLineChart.vue';
+import WidgetQuickTableCard from '~/components/widgets/WidgetQuickTableCard.vue';
 export default {
   name: 'ChartSection',
-
   components: {
     WidgetPieChart,
-    WidgetLineChart
-  },
+    WidgetLineChart,
+    WidgetQuickTableCard
+},
   data() {
     return {
       openPRControbutionsData: {},
@@ -47,6 +57,9 @@ export default {
       closedPRControbutionsData: {},
       openIssueContributionsData: {},
       closedIssueContributionsData: {},
+      commitContributionData: {},
+      repoWiseCommitCountDetails: [],
+      commitsPageInfo:{},
       firstTimeLoaded: false,
       contentLoaded: false
     }
@@ -61,6 +74,8 @@ export default {
         await this.getClosedPullRequestContributionsdata();
         await this.getOpenIssueContributionsdata();
         await this.getClosedIssueContributionsdata();
+        await this.getCommitsContributionsdata()
+        await this.getRepoWiseCommitCountDetails()
         this.contentLoaded = true;
         this.firstTimeLoaded = true;
       }
@@ -74,6 +89,8 @@ export default {
     await this.getClosedPullRequestContributionsdata();
     await this.getOpenIssueContributionsdata();
     await this.getClosedIssueContributionsdata();
+    await this.getCommitsContributionsdata()
+    await this.getRepoWiseCommitCountDetails()
     this.contentLoaded = true;
     this.firstTimeLoaded = true;
   },
@@ -97,7 +114,8 @@ export default {
                     return userData ? userData.count : 0;
                   }),
                   borderColor: this.$utils.getColor(item.user),
-                  fill: false
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
                 };
               });
               this.openPRControbutionsData = {
@@ -136,7 +154,8 @@ export default {
                     return userData ? userData.count : 0;
                   }),
                   borderColor: this.$utils.getColor(item.user),
-                  fill: false
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
                 };
               });
               this.closedPRControbutionsData = {
@@ -175,7 +194,8 @@ export default {
                     return userData ? userData.count : 0;
                   }),
                   borderColor: this.$utils.getColor(item.user),
-                  fill: false
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
                 };
               });
               this.mergedPRControbutionsData = {
@@ -214,7 +234,8 @@ export default {
                     return userData ? userData.count : 0;
                   }),
                   borderColor: this.$utils.getColor(item.user),
-                  fill: false
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
                 };
               });
               this.openIssueContributionsData = {
@@ -253,7 +274,8 @@ export default {
                     return userData ? userData.count : 0;
                   }),
                   borderColor: this.$utils.getColor(item.user),
-                  fill: false
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
                 };
               });
               this.closedIssueContributionsData = {
@@ -272,7 +294,70 @@ export default {
         .finally(() => {
           // After getting data from API
         });
-    }
+    },
+    async getCommitsContributionsdata() {
+      const queryParams = this.$route.query;
+      await this.$axios
+        .get(`${this.$constants.API_URL_PREFIX}/contributions/commit`, { params: queryParams })
+        .then((res) => {
+          if (res.data.data.length > 0) {
+            const commitControbutions = res.data.data;
+            if (commitControbutions.length > 0) {
+              const commitControbutionsLables = commitControbutions.map(item => this.$utils.getFormattedTimeStamp(item.date));
+              const commitControbutionsDataSet = commitControbutions[0].data.map(item => {
+                return {
+                  label: item.user,
+                  data: commitControbutions.map(entry => {
+                    const userData = entry.data.find(d => {
+                      return d.user === item.user
+                    });
+                    return userData ? userData.count : 0;
+                  }),
+                  borderColor: this.$utils.getColor(item.user),
+                  fill: false,
+                  backgroundColor: this.$utils.getColor(item.user)
+                };
+              });
+              this.commitContributionData = {
+                labels: commitControbutionsLables,
+                datasets: commitControbutionsDataSet
+              }
+            }
+          } else {
+            this.commitContributionData = {};
+          }
+        })
+        .catch((err) => {
+          this.commitContributionData = {};
+          this.$toaster.error(err);
+        })
+        .finally(() => {
+          // After getting data from API
+        });
+    },
+    async getRepoWiseCommitCountDetails() {
+      const queryParams = this.$route.query;
+      await this.$axios
+        .get(`${this.$constants.API_URL_PREFIX}/contributions/commit/details`, { params: queryParams })
+        .then((res) => {
+          if (res.data.data) {
+            const commitControbutionsDetails = res.data.data;
+            if (commitControbutionsDetails.details.length > 0) {
+              this.repoWiseCommitCountDetails = commitControbutionsDetails.details
+              this.commitsPageInfo = commitControbutionsDetails.page_info
+            }else{
+              this.repoWiseCommitCountDetails = []
+              this.commitsPageInfo.next = false
+            }
+          }
+        })
+        .catch((err) => {
+          this.$toaster.error(err);
+        })
+        .finally(() => {
+          // After getting data from API
+        });
+    },
   }
 }
 </script>

@@ -27,6 +27,79 @@ func (q *Queries) GetCommitByID(ctx context.Context, arg GetCommitByIDParams) (s
 	return id, err
 }
 
+const getDefaultBranchCommitByFilters = `-- name: GetDefaultBranchCommitByFilters :many
+SELECT distinct 
+    coll.login as commiter,
+    r.name as repository,
+    o.login as organization,
+    c.message as message,
+    c.github_committed_time as commit_date
+FROM commits c 
+JOIN branches b on b.id = c.branch_id 
+JOIN repositories r on r.id = b.repository_id
+JOIN repository_collaborators rc on rc.repo_id = r.id 
+JOIN organization_collaborators oc on oc.id = rc.organization_collaborator_id 
+JOIN organizations o on o.id = oc.organization_id 
+JOIN collaborators coll on coll.id = c.author_id  
+WHERE (c.github_committed_time between $1 AND $2)
+    AND b.is_default = true
+    AND coll.login = $3
+    AND o.login = $4
+    AND r.name = $5
+ORDER BY commit_date DESC
+`
+
+type GetDefaultBranchCommitByFiltersParams struct {
+	GithubCommittedTime   sql.NullTime   `json:"github_committed_time"`
+	GithubCommittedTime_2 sql.NullTime   `json:"github_committed_time_2"`
+	Login                 string         `json:"login"`
+	Login_2               string         `json:"login_2"`
+	Name                  sql.NullString `json:"name"`
+}
+
+type GetDefaultBranchCommitByFiltersRow struct {
+	Commiter     string         `json:"commiter"`
+	Repository   sql.NullString `json:"repository"`
+	Organization string         `json:"organization"`
+	Message      sql.NullString `json:"message"`
+	CommitDate   sql.NullTime   `json:"commit_date"`
+}
+
+func (q *Queries) GetDefaultBranchCommitByFilters(ctx context.Context, arg GetDefaultBranchCommitByFiltersParams) ([]GetDefaultBranchCommitByFiltersRow, error) {
+	rows, err := q.db.QueryContext(ctx, getDefaultBranchCommitByFilters,
+		arg.GithubCommittedTime,
+		arg.GithubCommittedTime_2,
+		arg.Login,
+		arg.Login_2,
+		arg.Name,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetDefaultBranchCommitByFiltersRow
+	for rows.Next() {
+		var i GetDefaultBranchCommitByFiltersRow
+		if err := rows.Scan(
+			&i.Commiter,
+			&i.Repository,
+			&i.Organization,
+			&i.Message,
+			&i.CommitDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getRepoWiseCommitContributionDetailsByFilters = `-- name: GetRepoWiseCommitContributionDetailsByFilters :many
 SELECT distinct 
     coll.login as commiter,
