@@ -6,19 +6,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Improwised/GPAT/constants"
 	"github.com/Improwised/GPAT/models"
 	"github.com/Improwised/GPAT/utils"
-	"github.com/shurcooL/githubv4"
 	"go.uber.org/zap"
+
+	"github.com/Improwised/GPAT/constants"
+	"github.com/shurcooL/githubv4"
 )
 
 type GithubCommitRepoQ struct {
-	ID            string
-	Name          string
-	DefaultBranch struct {
-		Name string
-	} `graphql:"defaultBranchRef"`
+	ID          string
+	Name        string
 	URL         string
 	HomepageUrl string
 	Description string
@@ -40,33 +38,24 @@ type GithubCommitRepoQ struct {
 	MergedPRs struct {
 		TotalCount int
 	} `graphql:"mergedPRs: pullRequests(states: MERGED)"`
-	Refs struct {
-		Nodes []struct {
-			Name   string
-			Target struct {
+	DefaultBranchRef struct {
+		ID     string
+		Name   string
+		Target struct {
+			Commit struct {
 				History struct {
 					Nodes    []GithubCommitQ
-					PageInfo struct {
-						HasNextPage bool
-						EndCursor   string
-					}
-				} `graphql:"history(first: $commitLimit, after: $commitCursor, author: { id: $memberID })"`
+					PageInfo PageInfo
+				} `graphql:"history(first: $commitLimit, after: $commitCursor, since: $sinceTime, until: $untilTime, author: { id: $memberID })"`
 			} `graphql:"... on Commit"`
 		}
-		PageInfo struct {
-			HasNextPage bool
-			EndCursor   string
-		}
-	} `graphql:"refs(refPrefix: \"refs/heads/\", first: $branchLimit, after: $branchCursor)"`
+	}
 }
 
-func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) error {
+func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs, start, end time.Time) error {
 	var noPages []string
-	end, start := utils.GetWeekTimestamps()
 	var commitsCursor *githubv4.String
 	var commitsLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
-	var branchCursor *githubv4.String
-	var branchLimit githubv4.Int = githubv4.Int(constants.DefaultLimit)
 	var commitQ struct {
 		User struct {
 			ContributionsCollection struct {
@@ -82,8 +71,8 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 		variables := map[string]interface{}{
 			"commitLimit":  commitsLimit,
 			"commitCursor": commitsCursor,
-			"branchLimit":  branchLimit,
-			"branchCursor": branchCursor,
+			"sinceTime":    githubv4.NewGitTimestamp(githubv4.GitTimestamp{start}),
+			"untilTime":    githubv4.NewGitTimestamp(githubv4.GitTimestamp{end}),
 			"startTime":    *githubv4.NewDateTime(githubv4.DateTime{start}),
 			"endTime":      *githubv4.NewDateTime(githubv4.DateTime{end}),
 			"orgID":        orgMember.ID,
@@ -96,48 +85,26 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 			return nil
 		}
 
-		for _, repo := range commitQ.User.ContributionsCollection.CommitContributionsByRepository {
-			github.CommitLog(DEBUG, fmt.Sprintf("📦️ Repo: %s", repo.Repository.Name))
-			_, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
-			if err != nil {
-				if err == sql.ErrNoRows {
-					_, err = github.model.InsertRepo(github.ctx, models.InsertRepoParams{
-						ID:              repo.Repository.ID,
-						Name:            sql.NullString{String: repo.Repository.Name, Valid: true},
-						IsPrivate:       sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
-						DefaultBranch:   sql.NullString{String: repo.Repository.DefaultBranch.Name},
-						Url:             sql.NullString{String: repo.Repository.URL},
-						HomepageUrl:     sql.NullString{String: repo.Repository.HomepageUrl},
-						OpenIssues:      sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
-						ClosedIssues:    sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
-						OpenPrs:         sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
-						ClosedPrs:       sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
-						MergedPrs:       sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
-						GithubCreatedAt: sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
-						GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
-					})
-					if err != nil {
-						github.CommitLog(ERROR, err)
-						return err
-					}
-				} else {
-					github.CommitLog(ERROR, err)
-					return err
-				}
-			}
-
-			for _, repoBranch := range repo.Repository.Refs.Nodes {
-				github.CommitLog(DEBUG, fmt.Sprintf("🌳 Branch: %s", repoBranch.Name))
-				branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
-					Name:         repoBranch.Name,
-					RepositoryID: repo.Repository.ID,
-				})
+		if len(commitQ.User.ContributionsCollection.CommitContributionsByRepository) > 0 {
+			for _, repo := range commitQ.User.ContributionsCollection.CommitContributionsByRepository {
+				github.CommitLog(DEBUG, fmt.Sprintf("📦️ Repo: %s", repo.Repository.Name))
+				_, err := github.model.GetRepoByID(github.ctx, repo.Repository.ID)
 				if err != nil {
 					if err == sql.ErrNoRows {
-						branchID, err = github.model.InsertBranch(github.ctx, models.InsertBranchParams{
-							ID:           utils.GenerateUUID(),
-							Name:         repoBranch.Name,
-							RepositoryID: repo.Repository.ID,
+						_, err = github.model.InsertRepo(github.ctx, models.InsertRepoParams{
+							ID:              repo.Repository.ID,
+							Name:            sql.NullString{String: repo.Repository.Name, Valid: true},
+							IsPrivate:       sql.NullBool{Bool: repo.Repository.IsPrivate, Valid: true},
+							DefaultBranch:   sql.NullString{String: repo.Repository.DefaultBranchRef.Name, Valid: true},
+							Url:             sql.NullString{String: repo.Repository.URL, Valid: true},
+							HomepageUrl:     sql.NullString{String: repo.Repository.HomepageUrl, Valid: true},
+							OpenIssues:      sql.NullInt32{Int32: int32(repo.Repository.OpenIssues.TotalCount), Valid: true},
+							ClosedIssues:    sql.NullInt32{Int32: int32(repo.Repository.ClosedIssues.TotalCount), Valid: true},
+							OpenPrs:         sql.NullInt32{Int32: int32(repo.Repository.OpenPRs.TotalCount), Valid: true},
+							ClosedPrs:       sql.NullInt32{Int32: int32(repo.Repository.ClosedPRs.TotalCount), Valid: true},
+							MergedPrs:       sql.NullInt32{Int32: int32(repo.Repository.MergedPRs.TotalCount), Valid: true},
+							GithubCreatedAt: sql.NullTime{Time: repo.Repository.CreatedAt, Valid: true},
+							GithubUpdatedAt: sql.NullTime{Time: repo.Repository.UpdatedAt, Valid: true},
 						})
 						if err != nil {
 							github.CommitLog(ERROR, err)
@@ -149,55 +116,86 @@ func (github *GithubService) LoadRepoByCommits(orgMember GithubOrgMemberArgs) er
 					}
 				}
 
-				for _, repoCommit := range repoBranch.Target.History.Nodes {
-					github.CommitLog(DEBUG, fmt.Sprintf("💬 Commit: %s", repoCommit.Message))
-					github.CommitLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", repoCommit.Author.User.Login))
-
-					committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
-					if err != nil {
-						github.CommitLog(ERROR, err)
-						return err
-					}
-					_, err = github.model.GetCommitByID(github.ctx, repoCommit.ID)
-					if err != nil {
-						if err == sql.ErrNoRows {
-							github.model.InsertCommit(github.ctx, models.InsertCommitParams{
-								ID:                  repoCommit.ID,
-								Message:             sql.NullString{String: repoCommit.Message, Valid: true},
-								BranchID:            branchID,
-								AuthorID:            committerID,
-								Url:                 sql.NullString{String: repoCommit.URL},
-								CommitUrl:           sql.NullString{String: repoCommit.CommitUrl},
-								GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate},
-							})
-						} else {
+				// Get the branch name and set default branch to true
+				github.CommitLog(DEBUG, fmt.Sprintf("🌳 Branch: %s", repo.Repository.DefaultBranchRef.Name))
+				branchID, err := github.model.GetBranchByID(github.ctx, models.GetBranchByIDParams{
+					Name:         repo.Repository.DefaultBranchRef.Name,
+					RepositoryID: repo.Repository.ID,
+				})
+				if err != nil {
+					if err == sql.ErrNoRows {
+						branchID, err = github.model.InsertBranch(github.ctx, models.InsertBranchParams{
+							ID:           repo.Repository.DefaultBranchRef.ID,
+							Name:         repo.Repository.DefaultBranchRef.Name,
+							RepositoryID: repo.Repository.ID,
+							IsDefault:    true,
+						})
+						if err != nil {
 							github.CommitLog(ERROR, err)
 							return err
 						}
+					} else {
+						github.CommitLog(ERROR, err)
+						return err
 					}
-
 				}
-				if !repoBranch.Target.History.PageInfo.HasNextPage {
+
+				// Get the contributors commits
+				if len(repo.Repository.DefaultBranchRef.Target.Commit.History.Nodes) > 0 {
+					for _, repoCommit := range repo.Repository.DefaultBranchRef.Target.Commit.History.Nodes {
+						github.CommitLog(DEBUG, fmt.Sprintf("💬 Commit: %s", repoCommit.Message))
+						github.CommitLog(DEBUG, fmt.Sprintf("💬👤 Committer: %s", repoCommit.Author.User.Login))
+						committerID, err := github.model.GetMemberByLogin(github.ctx, repoCommit.Author.User.Login)
+						if err != nil {
+							github.CommitLog(ERROR, err)
+							return err
+						}
+						_, err = github.model.GetCommitByID(github.ctx, models.GetCommitByIDParams{
+							HashID:   repoCommit.ID,
+							BranchID: branchID,
+						})
+						if err != nil {
+							if err == sql.ErrNoRows {
+								_, err := github.model.InsertCommit(github.ctx, models.InsertCommitParams{
+									ID:                  utils.GenerateUUID(),
+									HashID:              repoCommit.ID,
+									Message:             sql.NullString{String: repoCommit.Message, Valid: true},
+									BranchID:            branchID,
+									AuthorID:            committerID,
+									Url:                 sql.NullString{String: repoCommit.URL, Valid: true},
+									CommitUrl:           sql.NullString{String: repoCommit.CommitUrl, Valid: true},
+									GithubCommittedTime: sql.NullTime{Time: repoCommit.CommittedDate, Valid: true},
+								})
+								if err != nil {
+									github.CommitLog(ERROR, err)
+									return err
+								}
+							} else {
+								github.CommitLog(ERROR, err)
+								return err
+							}
+						}
+					}
+				} else {
+					if !utils.Contains("Commit", noPages) {
+						noPages = append(noPages, "Commit")
+						commitsLimit = githubv4.Int(0)
+					}
+					break
+				}
+				// Commit page break
+				if !repo.Repository.DefaultBranchRef.Target.Commit.History.PageInfo.HasNextPage {
 					if !utils.Contains("Commit", noPages) {
 						noPages = append(noPages, "Commit")
 						commitsLimit = githubv4.Int(0)
 					}
 				}
-				commitsCursor = (*githubv4.String)(&repoBranch.Target.History.PageInfo.EndCursor)
+				commitsCursor = &repo.Repository.DefaultBranchRef.Target.Commit.History.PageInfo.EndCursor
 			}
-			if !repo.Repository.Refs.PageInfo.HasNextPage {
-				if !utils.Contains("Branch", noPages) {
-					noPages = append(noPages, "Branch")
-					branchLimit = githubv4.Int(0)
-				}
-			}
-			branchCursor = (*githubv4.String)(&repo.Repository.Refs.PageInfo.EndCursor)
-		}
-
-		if len(commitQ.User.ContributionsCollection.CommitContributionsByRepository) == 0 {
+		} else {
 			break
 		}
-		if (len(noPages)) == 2 {
+		if len(noPages) == 1 {
 			break
 		}
 	}

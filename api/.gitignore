@@ -22,3 +22,6 @@ go.work
 
 # AIR temp folder (hot reload)
 tmp/*
+
+# Goland IDK Environement
+.idea/*

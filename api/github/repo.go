@@ -54,11 +54,11 @@ func (github *GithubService) LoadRepo(orgMember GithubOrgMemberArgs, start, end 
 		github.LoadRepoLog(ERROR, err)
 		return err
 	}
-	// err = github.LoadRepoByCommits(orgMember)
-	// if err != nil {
-	// 	github.LoadRepoLog(ERROR, err)
-	// 	return err
-	// }
+	err = github.LoadRepoByCommits(orgMember, start, end)
+	if err != nil {
+		github.LoadRepoLog(ERROR, err)
+		return err
+	}
 	return nil
 }
 

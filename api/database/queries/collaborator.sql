@@ -27,3 +27,8 @@ ORDER BY collaborators.login;
 SELECT DISTINCT
     collaborators.id
 FROM "collaborators";
+
+-- name: GetMemberDetailsByLogin :one
+SELECT * 
+FROM "collaborators" 
+WHERE collaborators.login = $1;
