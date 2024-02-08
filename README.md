@@ -24,7 +24,7 @@ To interact with the Github API, you'll need to set up a personal access token. 
 Now, add `GITHUB_TOKEN` to `.env.docker` file for the api:
 
 ```bash
-echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> ./api/.env.example
+echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> ./api/.env.docker
 ```
 ### Step 3: Start All Service Using Docker
 
