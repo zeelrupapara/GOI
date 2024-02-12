@@ -178,3 +178,18 @@ FROM
     DateSeries ds 
 LEFT JOIN 
     CoreData cd ON ds.user_date = cd.updated_date AND cd.login = ds.login;
+
+
+-- name: UpdatePR :exec
+UPDATE
+    pull_requests
+SET
+    status = $2,
+    is_draft = $3,
+    title = $4,
+    github_closed_at = $5,
+    github_merged_at = $6,
+    github_updated_at = $7,
+    updated_at = $8
+WHERE
+    id = $1;

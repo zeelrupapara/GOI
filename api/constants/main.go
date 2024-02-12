@@ -7,6 +7,8 @@ const (
 	OPEN_STATUS      string = "OPEN"
 	CLOSED_STATUS    string = "CLOSED"
 	MERGED_STATUS    string = "MERGED"
+	PR_ALL_STATUS    string = "OPEN,CLOSED,MERGED"
+	ISSUE_ALL_STATUS string = "OPEN,CLOSED"
 )
 
 // fiber contexts

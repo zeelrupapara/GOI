@@ -419,3 +419,43 @@ func (q *Queries) InsertPR(ctx context.Context, arg InsertPRParams) (string, err
 	err := row.Scan(&id)
 	return id, err
 }
+
+const updatePR = `-- name: UpdatePR :exec
+UPDATE
+    pull_requests
+SET
+    status = $2,
+    is_draft = $3,
+    title = $4,
+    github_closed_at = $5,
+    github_merged_at = $6,
+    github_updated_at = $7,
+    updated_at = $8
+WHERE
+    id = $1
+`
+
+type UpdatePRParams struct {
+	ID              string         `json:"id"`
+	Status          sql.NullString `json:"status"`
+	IsDraft         sql.NullBool   `json:"is_draft"`
+	Title           sql.NullString `json:"title"`
+	GithubClosedAt  sql.NullTime   `json:"github_closed_at"`
+	GithubMergedAt  sql.NullTime   `json:"github_merged_at"`
+	GithubUpdatedAt sql.NullTime   `json:"github_updated_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+}
+
+func (q *Queries) UpdatePR(ctx context.Context, arg UpdatePRParams) error {
+	_, err := q.db.ExecContext(ctx, updatePR,
+		arg.ID,
+		arg.Status,
+		arg.IsDraft,
+		arg.Title,
+		arg.GithubClosedAt,
+		arg.GithubMergedAt,
+		arg.GithubUpdatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}

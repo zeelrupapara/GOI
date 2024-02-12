@@ -175,7 +175,21 @@ func (github *GithubService) LoadRepoByIssues(orgMember GithubOrgMemberArgs, sta
 							github.IssuesLog(ERROR, err)
 							return err
 						}
+					} else {
+						// Update Issue
+						err = github.model.UpdateIssue(github.ctx, models.UpdateIssueParams{
+							ID:              issueID,
+							Title:           issueContribution.Issue.Title,
+							Status:          issueContribution.Issue.State,
+							GithubClosedAt:  sql.NullTime{Time: issueContribution.Issue.ClosedAt, Valid: true},
+							GithubUpdatedAt: sql.NullTime{Time: issueContribution.Issue.UpdatedAt, Valid: true},
+							UpdatedAt:       time.Now(),
+						})
+						if err != nil {
+							github.IssuesLog(ERROR, err)
+						}
 					}
+
 					// labal
 					if len(issueContribution.Issue.Labels.Nodes) > 0 {
 						for _, labal := range issueContribution.Issue.Labels.Nodes {

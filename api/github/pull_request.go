@@ -280,6 +280,21 @@ func (github *GithubService) LoadRepoByPullRequests(orgMember GithubOrgMemberArg
 							github.PRLog(ERROR, err)
 							return err
 						}
+					} else {
+						// Update PR
+						err = github.model.UpdatePR(github.ctx, models.UpdatePRParams{
+							ID:              prID,
+							Title:           sql.NullString{String: prContribution.PullRequest.Title, Valid: true},
+							Status:          sql.NullString{String: prContribution.PullRequest.State, Valid: true},
+							IsDraft:         sql.NullBool{Bool: prContribution.PullRequest.IsDraft, Valid: true},
+							GithubClosedAt:  sql.NullTime{Time: prContribution.PullRequest.ClosedAt, Valid: true},
+							GithubMergedAt:  sql.NullTime{Time: prContribution.PullRequest.MergedAt, Valid: true},
+							GithubUpdatedAt: sql.NullTime{Time: prContribution.PullRequest.UpdatedAt, Valid: true},
+							UpdatedAt:       time.Now(),
+						})
+						if err != nil {
+							github.PRLog(ERROR, err)
+						}
 					}
 
 					// Review Request

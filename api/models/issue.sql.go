@@ -387,3 +387,37 @@ func (q *Queries) InsertIssue(ctx context.Context, arg InsertIssueParams) (strin
 	err := row.Scan(&id)
 	return id, err
 }
+
+const updateIssue = `-- name: UpdateIssue :exec
+UPDATE
+    issues
+SET
+    status = $2,
+    title = $3,
+    github_closed_at = $4,
+    github_updated_at = $5,
+    updated_at = $6
+WHERE
+    id = $1
+`
+
+type UpdateIssueParams struct {
+	ID              string       `json:"id"`
+	Status          string       `json:"status"`
+	Title           string       `json:"title"`
+	GithubClosedAt  sql.NullTime `json:"github_closed_at"`
+	GithubUpdatedAt sql.NullTime `json:"github_updated_at"`
+	UpdatedAt       time.Time    `json:"updated_at"`
+}
+
+func (q *Queries) UpdateIssue(ctx context.Context, arg UpdateIssueParams) error {
+	_, err := q.db.ExecContext(ctx, updateIssue,
+		arg.ID,
+		arg.Status,
+		arg.Title,
+		arg.GithubClosedAt,
+		arg.GithubUpdatedAt,
+		arg.UpdatedAt,
+	)
+	return err
+}

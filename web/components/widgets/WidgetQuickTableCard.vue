@@ -13,7 +13,6 @@
                     <th>Repository</th>
                     <th>Branch</th>
                     <th>Organization</th>
-                    <th>Date</th>
                     <th>Commits</th>
                   </tr>
                 </thead>
@@ -27,9 +26,8 @@
                         :href="`${$constants.GITHUB_URL_PREFIX}/${tableDetail.organization}/${tableDetail.repository}/blob/${tableDetail.branch}`">{{
                           tableDetail.branch }}</a></td>
                     <td>{{ tableDetail.organization }}</td>
-                    <td>{{ getFormatedDate(tableDetail.date) }}</td>
                     <td><b-button class="btn btn-secondary btn-sm" type="button"
-                        @click="LoadCommits(tableDetail.organization, tableDetail.repository, tableDetail.committer)"><i
+                        @click="LoadCommits(tableDetail.organization, tableDetail.repository, tableDetail.committer)">{{ tableDetail.commit_count }} <i
                           class="fas fa-eye"></i>
                         <WidgetCommitsCard :commit-history-data="commitHistoryData" />
                       </b-button>

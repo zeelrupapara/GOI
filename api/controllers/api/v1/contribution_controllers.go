@@ -20,6 +20,7 @@ type CommitHistory struct {
 	Repository    string    `json:"repository"`
 	Organization  string    `json:"organization"`
 	CommitMessage string    `json:"commit_message"`
+	CommitUrl     string    `json:"commit_url"`
 	CommittedDate time.Time `json:"committed_date"`
 }
 
@@ -49,12 +50,11 @@ type ContributionsDetails struct {
 }
 
 type CommitContributionDetails struct {
-	Repository   string    `json:"repository"`
-	Branch       string    `json:"branch"`
-	Committer    string    `json:"committer"`
-	CommitCount  int       `json:"commit_count"`
-	Organization string    `json:"organization"`
-	Date         time.Time `json:"date"`
+	Repository   string `json:"repository"`
+	Branch       string `json:"branch"`
+	Committer    string `json:"committer"`
+	CommitCount  int    `json:"commit_count"`
+	Organization string `json:"organization"`
 }
 
 type PageInfo struct {
@@ -425,7 +425,7 @@ func (ctrl *ContributionControllers) GetPullRequestContributionInDetailsByFilter
 	// get status
 	statusQP := c.Query(constants.PR_STATUS)
 	if statusQP == "" {
-		status = "OPEN, CLOSED, MERGED"
+		status = constants.PR_ALL_STATUS
 	} else {
 		status = strings.ToUpper(statusQP)
 	}
@@ -560,7 +560,7 @@ func (ctrl *ContributionControllers) GetIssueContributionInDetailsByFilters(c *f
 	// get status
 	statusQP := c.Query(constants.ISSUE_STATUS)
 	if statusQP == "" {
-		status = "OPEN, CLOSED"
+		status = constants.ISSUE_ALL_STATUS
 	} else {
 		status = strings.ToUpper(statusQP)
 	}
@@ -874,7 +874,7 @@ func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *f
 		page = int32(pageInt)
 	}
 
-	// Get PullRequest Contribution
+	// Get Commit Contribution
 	commitContributionDetails, err := ctrl.model.GetRepoWiseCommitContributionDetailsByFilters(c.Context(), models.GetRepoWiseCommitContributionDetailsByFiltersParams{
 		GithubCommittedTime:   sql.NullTime{Time: from, Valid: true},
 		GithubCommittedTime_2: sql.NullTime{Time: to, Valid: true},
@@ -895,7 +895,6 @@ func (ctrl *ContributionControllers) GetCommitContributionsDetailsByFilters(c *f
 			Committer:    commitContributionDeatils.Commiter,
 			CommitCount:  int(commitContributionDeatils.Commits),
 			Organization: commitContributionDeatils.Organization,
-			Date:         commitContributionDeatils.CommitDate,
 		})
 	}
 
@@ -978,6 +977,7 @@ func (ctrl *ContributionControllers) GetDefultBranchCommitsByFilters(c *fiber.Ct
 			Repository:    utils.SqlNullString(commit.Repository),
 			Organization:  commit.Organization,
 			CommitMessage: utils.SqlNullString(commit.Message),
+			CommitUrl:     utils.SqlNullString(commit.Url),
 			CommittedDate: utils.SqlNullTime(commit.CommitDate),
 		})
 	}

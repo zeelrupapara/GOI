@@ -159,3 +159,15 @@ FROM
     DateSeries ds 
 LEFT JOIN 
     CoreData cd ON ds.user_date = cd.updated_date AND cd.login = ds.login;
+
+-- name: UpdateIssue :exec
+UPDATE
+    issues
+SET
+    status = $2,
+    title = $3,
+    github_closed_at = $4,
+    github_updated_at = $5,
+    updated_at = $6
+WHERE
+    id = $1;

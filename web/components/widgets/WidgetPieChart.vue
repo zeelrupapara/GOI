@@ -75,6 +75,7 @@ export default {
               const pieChartDatasets = [{
                 data: orgContributions.map(item => item.total_prs + item.total_issues),
                 backgroundColor: orgContributions.map(item => this.$utils.getColor(item.organization_name)),
+                hoverBackgroundColor: orgContributions.map(item => this.$utils.getColor(item.organization_name)),
               }]
               this.orgChartData = {
                 labels: pieChartLables,

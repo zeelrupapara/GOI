@@ -39,7 +39,7 @@
                       <p class="text-muted">
                         <small>{{ $utils.getFormattedDateTime(data.committed_date) }}</small>
                       </p>
-                      <p class="mb-0">{{ formatedMessage(data.commit_message) }}</p>
+                      <p class="mb-0"> <a :href="data.commit_url" target="_black">{{ formatedMessage(data.commit_message) }}</a></p>
                     </div>
                   </div>
                 </article>
