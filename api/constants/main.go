@@ -37,7 +37,10 @@ const (
 
 // Success messages
 // ...
-const ()
+const (
+	// github data
+	SuccessGetGithubData = "Successfully executed github command"
+)
 
 // Fail messages
 // ...
@@ -68,4 +71,7 @@ const (
 	ErrNotProvideRepository   = "Not provide repository"
 	ErrNotProvideMember       = "Not provide member"
 	ErrGetCommits             = "Unable to get commits"
+
+	// github data
+	ErrGithubData = "Unable to get github data"
 )

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Improwised/GPAT/config"
+	"github.com/Improwised/GPAT/constants"
 	gh "github.com/Improwised/GPAT/github"
 	"github.com/Improwised/GPAT/utils"
 	"github.com/spf13/cobra"
@@ -52,13 +53,16 @@ func GetGithubCommandDef(cfg config.AppConfig, logger *zap.Logger) cobra.Command
 				logger.Error(err.Error())
 			}
 
-			// load orgs data based on time
-			err = githubService.LoadOrganizations(startTime, endTime)
-			if err != nil {
-				fmt.Println(err)
-			}
-			if err != nil {
-				panic(err)
+			// Execute command week wise
+			weekWiseTime := utils.SplitTimeRange(startTime, endTime, constants.CommandIntervalTime)
+			for _, weekTime := range weekWiseTime {
+				err = githubService.LoadOrganizations(weekTime[0], weekTime[1])
+				if err != nil {
+					fmt.Println(err)
+				}
+				if err != nil {
+					panic(err)
+				}
 			}
 		},
 	}

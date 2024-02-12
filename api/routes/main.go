@@ -49,6 +49,11 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 		return err
 	}
 
+	err = setupGithubDataController(v1, db, config, logger, middlewares)
+	if err != nil{
+		return err
+	}
+
 	mu.Unlock()
 	return nil
 }
@@ -89,5 +94,15 @@ func setupContributionsController(v1 fiber.Router, db *sql.DB, logger *zap.Logge
 	contributionRouter.Get("/issue/details", contributionController.GetIssueContributionInDetailsByFilters)
 	contributionRouter.Get("/commit/details", contributionController.GetCommitContributionsDetailsByFilters)
 	contributionRouter.Get(fmt.Sprintf("/organizations/:%s/repository/:%s/member/:%s", constants.ParamOrg, constants.ParamRepo, constants.ParamMember), contributionController.GetDefultBranchCommitsByFilters)
+	return nil
+}
+
+func setupGithubDataController(v1 fiber.Router, db *sql.DB, config config.AppConfig, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	githubDataController, err := controller.NewGithubDataController(db, logger, config)
+	if err != nil {
+		return err
+	}
+	githubDataRouter := v1.Group("/github")
+	githubDataRouter.Post("/data", githubDataController.GetGithubData)
 	return nil
 }
