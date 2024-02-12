@@ -3,16 +3,24 @@
   <div class="navbar-custom">
     <div class="container-fluid">
       <ul class="list-unstyled topnav-menu float-right mb-0 mx-2">
-        <li class="dropdown d-none d-lg-inline-block">
-          <button type="button" @click="clearFilter" v-b-tooltip.hover title="Reset Filters" class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i class="fas fa-undo noti-icon"></i></button>
+        <li class="dropdown d-none d-lg-inline-block ml-2">
+          <button type="button" v-b-modal.modal-prevent-closing v-b-tooltip.hover title="Fetch Github Data"
+            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
+              class="fas fa-globe noti-icon"></i></button>
         </li>
-        <li class="dropdown d-none d-lg-inline-block mx-2">
+        <li class="dropdown d-none d-lg-inline-block">
+          <button type="button" @click="clearFilter" v-b-tooltip.hover title="Reset Filters"
+            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
+              class="fas fa-undo noti-icon"></i></button>
+        </li>
+        <!-- <li class="dropdown d-none d-lg-inline-block mx-2">
           <a v-b-tooltip.hover title="FullScreen" class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-toggle="fullscreen" href="#"
             @click="initFullScreen">
             <i class="fas fa-expand noti-icon"></i>
           </a>
-        </li>
+        </li> -->
       </ul>
+      <FetchGithubData />
 
       <!-- LOGO -->
       <div class="logo-box">
@@ -61,7 +69,11 @@
 </template>
 
 <script>
+import FetchGithubData from '~/components/widgets/WidgetGithubDataCard.vue';
 export default {
+  components: {
+    FetchGithubData
+  },
   methods: {
     toggleMenu() {
       this.$parent.toggleMenu();
@@ -99,7 +111,7 @@ export default {
       const element = document.getElementById("topnav-menu-content");
       element.classList.toggle("show");
     },
-    clearFilter(){
+    clearFilter() {
       this.$router.push({ path: this.$route.path, query: {} })
     }
   }

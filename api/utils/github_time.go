@@ -30,3 +30,26 @@ func ConvertEpochToTime(t string) (time.Time, error) {
 	datetime := time.Unix(seconds, 0).UTC()
 	return datetime, nil
 }
+
+func ConvertIntToTime(t int) (time.Time, error) {
+	seconds := t / 1000
+	datetime := time.Unix(int64(seconds), 0).UTC()
+	return datetime, nil
+}
+
+// Split time by specific time duration
+func SplitTimeRange(start, end time.Time, interval time.Duration) [][2]time.Time {
+	var subRanges [][2]time.Time
+
+	currentTime := start
+	for currentTime.Before(end) {
+		subEnd := currentTime.Add(interval)
+		if subEnd.After(end) {
+			subEnd = end
+		}
+		subRanges = append(subRanges, [2]time.Time{currentTime, subEnd})
+		currentTime = subEnd
+	}
+
+	return subRanges
+}

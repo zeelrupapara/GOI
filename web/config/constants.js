@@ -30,6 +30,12 @@ const CONSTANTS = {
     CLOSED_ISSUE_COLOR: "rgb(214, 23, 38, 0.6)",
   },
 
+  // Messages
+  MESSAGES: {
+    GITHUB_DATA_FETCH_ERROR: "Failed to fetch data from GitHub. Please try again later.",
+    GITHUB_DATA_FETCH_SUCCESS: "Process to fetch data from GitHub, please wait. This may take a few minutes.",
+  },
+
   STATUS_CODES: {
     100: "Continue",
     101: "Switching Protocols",
