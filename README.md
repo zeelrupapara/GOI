@@ -32,20 +32,30 @@ To start all server (api, ui, database) using docker-compose file
 ```bash
 docker compose up
 ```
-Click [GPAT](http://localhost) for access the UI 
+See **GPAT**: http://localhost:80
 
-### Step 4: Retrieve Data from Github
-> This command is optional If you want the another time range data from github instad of currunt week
+**API** (Optional): http://localhost:8080
+**UI** (Optional): http://localhost:5000
+
+---
+
+### Retrieve Data from Github
+> This command is optional If you want to get the custom range data from github then try `cd api && go run main.go github --help`
+
 Fetch organization and member data from Github using:
+> By default last one week of github data fetch by below command
 
 ```bash
+cd api
+# copy env from .env.example file
+cp .env.example .env
+# After create .env add GITHUB_TOKEN in that env
+# get github data using this command
 go run main.go github
 ```
-
-This command populates the database with the necessary information for managing members.
 
 ## Usage
 
 With the setup complete, you can now use GPAT to manage members across your organizations efficiently.
 
-Feel free to explore additional commands and functionalities provided by GPAT by checking the available options in `main.go`.
+Feel free to explore additional commands and functionalities provided by GPAT by checking the available options in `go run main.go --help`.
