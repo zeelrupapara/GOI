@@ -127,45 +127,80 @@ func (github *GithubService) LoadMembers(org GithubOrganizationQ, start, end tim
 
 func (github *GithubService) LoadMember(username string) (string, error) {
 	var memID string
-	var memberQ struct {
-		User GithubMemberQ `graphql:"user(login: $username)"`
-	}
+	if username != "" {
+		var memberQ struct {
+			User GithubMemberQ `graphql:"user(login: $username)"`
+		}
 
-	variables := map[string]interface{}{
-		"username": githubv4.String(username),
-	}
+		variables := map[string]interface{}{
+			"username": githubv4.String(username),
+		}
 
-	err := github.client.Query(context.Background(), &memberQ, variables)
-	if err != nil {
-		github.LoadMemberLog(ERROR, err)
-		return memID, err
-	}
+		err := github.client.Query(context.Background(), &memberQ, variables)
+		if err != nil {
+			github.LoadMemberLog(ERROR, err)
+			return memID, err
+		}
 
-	memID, err = github.model.GetMemberByLogin(github.ctx, username)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			memID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
-				ID:              memberQ.User.ID,
-				Login:           memberQ.User.Login,
-				Name:            sql.NullString{String: memberQ.User.Name, Valid: true},
-				Email:           sql.NullString{String: memberQ.User.Email, Valid: true},
-				Url:             sql.NullString{String: memberQ.User.URL, Valid: true},
-				AvatarUrl:       sql.NullString{String: memberQ.User.AvatarURL, Valid: true},
-				WebsiteUrl:      sql.NullString{String: memberQ.User.WebsiteURL, Valid: true},
-				GithubCreatedAt: sql.NullTime{Time: memberQ.User.GithubCreatedAt, Valid: true},
-				GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
-			})
-			if err != nil {
+		memID, err = github.model.GetMemberByLogin(github.ctx, username)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				memID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
+					ID:              memberQ.User.ID,
+					Login:           memberQ.User.Login,
+					Name:            sql.NullString{String: memberQ.User.Name, Valid: true},
+					Email:           sql.NullString{String: memberQ.User.Email, Valid: true},
+					Url:             sql.NullString{String: memberQ.User.URL, Valid: true},
+					AvatarUrl:       sql.NullString{String: memberQ.User.AvatarURL, Valid: true},
+					WebsiteUrl:      sql.NullString{String: memberQ.User.WebsiteURL, Valid: true},
+					GithubCreatedAt: sql.NullTime{Time: memberQ.User.GithubCreatedAt, Valid: true},
+					GithubUpdatedAt: sql.NullTime{Time: memberQ.User.GithubUpdatedAt, Valid: true},
+				})
+				if err != nil {
+					github.LoadMemberLog(ERROR, err)
+					return memID, err
+				}
+			} else {
 				github.LoadMemberLog(ERROR, err)
 				return memID, err
 			}
-		} else {
+		}
+	}else{
+		memID, err := github.SetUnknownUserForNoUser()
+		if err != nil {
 			github.LoadMemberLog(ERROR, err)
 			return memID, err
 		}
 	}
-
 	return memID, nil
+}
+
+// Sets the unknown user if no user is found.
+func (github *GithubService) SetUnknownUserForNoUser() (id string, err error) {
+	unknownUserID, err := github.model.GetMemberByLogin(github.ctx, constants.UNKNOWN_USER_LOGIN)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			unknownUserID, err = github.model.InsertMember(github.ctx, models.InsertMemberParams{
+				ID:              constants.UNKNOWN_USER_ID,
+				Login:           constants.UNKNOWN_USER_LOGIN,
+				Name:            sql.NullString{String: constants.UNKNOWN_USER_NAME, Valid: true},
+				Email:           sql.NullString{String: constants.UNKNOWN_USER_EMAIL, Valid: true},
+				Url:             sql.NullString{String: constants.UNKNOWN_USER_URL, Valid: true},
+				AvatarUrl:       sql.NullString{String: constants.UNKNOWN_USER_AVATARURL, Valid: true},
+				WebsiteUrl:      sql.NullString{String: constants.UNKNOWN_USER_WEBSITEURL, Valid: true},
+				GithubCreatedAt: sql.NullTime{Time: constants.UNKNOWN_USER_CREATED_AT, Valid: true},
+				GithubUpdatedAt: sql.NullTime{Time: constants.UNKNOWN_USER_UPDATED_AT, Valid: true},
+			})
+			if err != nil {
+				github.LoadMemberLog(ERROR, err)
+				return "", err
+			}
+		} else {
+			github.LoadMemberLog(ERROR, err)
+			return "", err
+		}
+	}
+	return unknownUserID, nil
 }
 
 func (github *GithubService) LoadMembersLog(level string, message interface{}) {
