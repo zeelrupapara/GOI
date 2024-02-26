@@ -33,7 +33,7 @@
           :content-loaded="contentLoaded" :first-time-loaded="firstTimeLoaded" />
       </b-col>
       <b-col md="6">
-        <WidgetQuickTableCard class="h-100" title="Merged Pull Request" :page-info="commitsPageInfo" :table-details="repoWiseCommitCountDetails" table-title="Commit Details" />
+        <WidgetCommitTableCard class="h-100" title="Merged Pull Request" :page-info="commitsPageInfo" :table-details="repoWiseCommitCountDetails" table-title="Commit Details" />
       </b-col>
     </b-row>
   </div>
@@ -42,13 +42,13 @@
 <script>
 import WidgetPieChart from '~/components/widgets/WidgetPieChart.vue';
 import WidgetLineChart from '~/components/widgets/WidgetLineChart.vue';
-import WidgetQuickTableCard from '~/components/widgets/WidgetQuickTableCard.vue';
+import WidgetCommitTableCard from '~/components/widgets/WidgetCommitTableCard.vue';
 export default {
   name: 'ChartSection',
   components: {
     WidgetPieChart,
     WidgetLineChart,
-    WidgetQuickTableCard
+    WidgetCommitTableCard
 },
   data() {
     return {
