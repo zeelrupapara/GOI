@@ -33,7 +33,7 @@
           :content-loaded="contentLoaded" :first-time-loaded="firstTimeLoaded" />
       </b-col>
       <b-col md="6">
-        <WidgetCommitTableCard class="h-100" title="Merged Pull Request" :page-info="commitsPageInfo" :table-details="repoWiseCommitCountDetails" table-title="Commit Details" />
+        <WidgetCommitTableCard class="h-100 card" title="Merged Pull Request" :page-info="commitsPageInfo" :table-details="repoWiseCommitCountDetails" table-title="Commit Details" />
       </b-col>
     </b-row>
   </div>
