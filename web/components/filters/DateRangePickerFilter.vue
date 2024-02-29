@@ -85,7 +85,4 @@ export default {
   .vue-date-picker ::v-deep .mx-input{
     padding: 1.2rem;
   }
-  .vue-date-picker {
-    width: inherit;
-  }
 </style>

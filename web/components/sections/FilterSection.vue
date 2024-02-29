@@ -1,10 +1,10 @@
 <template>
   <div class="row justify-content-center">
-    <div v-for="(filter, index) in multiselectFilters" :key="index" class="col-12 col-sm-12 col-md-6 col-xl-3 py-1">
+    <div v-for="(filter, index) in multiselectFilters" :key="index" class="col col-3">
       <MultiSelectDropdownFilter id="select_users" :placeholder="filter.placeholder" :options="filter.options"
         :query="filter.query" :selected-options="filter.selectedOptions" />
     </div>
-    <div class="col-12 col-sm-12 col-md-6 col-xl-3 py-1">
+    <div class="col col-3">
       <DateRangePickerFilter :placeholder="timeRangeSelectPlaceholder" />
     </div>
   </div>

@@ -3,12 +3,12 @@
   <div class="navbar-custom">
     <div class="container-fluid">
       <ul class="list-unstyled topnav-menu float-right mb-0 mx-2">
-        <li class="dropdown d-lg-inline-block ml-2">
+        <li class="dropdown d-none d-lg-inline-block ml-2">
           <button type="button" v-b-modal.modal-prevent-closing v-b-tooltip.hover title="Fetch Github Data"
             class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
               class="fas fa-globe noti-icon"></i></button>
         </li>
-        <li class="dropdown d-lg-inline-block">
+        <li class="dropdown d-none d-lg-inline-block">
           <button type="button" @click="clearFilter" v-b-tooltip.hover title="Reset Filters"
             class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
               class="fas fa-undo noti-icon"></i></button>
