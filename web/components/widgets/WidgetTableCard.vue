@@ -5,7 +5,7 @@
         <div class="col-xl-12">
             <Portlet :headertitle="tableTitle">
               <div class="col-sm-12 col-md-6">
-                  <div id="tickets-table_filter" class="dataTables_filter">
+                  <div id="status-table_filter" class="dataTables_filter ml-2">
                       <label class="d-inline-flex align-items-center">
                         <b-form-select @change="onStatusChange" v-model="selectedStatus" :options="statusOptions" size="sm" class="mt-3"></b-form-select>
                       </label>
