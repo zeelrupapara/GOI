@@ -1,7 +1,7 @@
 <template>
   <div class="mt-3">
       <VueDraggable v-if="matricsData.length > 0" class="row">
-        <b-col v-for="(matrix, index) in matricsData" :key="index" class="col-12 col-sm-12 col-md-6 col-xl-3">
+        <b-col v-for="(matrix, index) in matricsData" :key="index" class="col-md-6 col-xl-3">
           <WidgetCountCard :count="matrix.count" :title="matrix.title" />
         </b-col>
       </VueDraggable>

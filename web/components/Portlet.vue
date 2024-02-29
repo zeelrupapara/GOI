@@ -39,7 +39,7 @@ export default {
 </script>
 
 <template>
-<div v-if="isVisible">
+<div v-if="isVisible" class="card h-100">
     <!-- card header -->
 
     <div class="card-body">

@@ -26,11 +26,10 @@
                         :href="`${$constants.GITHUB_URL_PREFIX}/${tableDetail.organization}/${tableDetail.repository}/blob/${tableDetail.branch}`">{{
                           tableDetail.branch }}</a></td>
                     <td>{{ tableDetail.organization }}</td>
-                    <td>
-                      <b-button class="btn btn-secondary btn-sm" type="button"
-                        @click="LoadCommits(tableDetail.organization, tableDetail.repository, tableDetail.committer, index)">{{ tableDetail.commit_count }} <i
+                    <td><b-button class="btn btn-secondary btn-sm" type="button"
+                        @click="LoadCommits(tableDetail.organization, tableDetail.repository, tableDetail.committer)">{{ tableDetail.commit_count }} <i
                           class="fas fa-eye"></i>
-                        <WidgetCommitsModelCard :commit-history-data="commitHistoryData" :index="index" />
+                        <WidgetCommitsCard :commit-history-data="commitHistoryData" />
                       </b-button>
                     </td>
                   </tr>
@@ -63,10 +62,10 @@
 </template>
 
 <script>
-import WidgetCommitsModelCard from "~/components/widgets/WidgetCommitsModelCard.vue"
+import WidgetCommitsCard from "~/components/widgets/WidgetCommitsCard.vue"
 export default {
   components: {
-    WidgetCommitsModelCard
+    WidgetCommitsCard
   },
   props: {
     tableTitle: {
@@ -88,7 +87,6 @@ export default {
   data() {
     return {
       commitHistoryData: {},
-      commitCardOpen: [],
     }
   },
   watch: {
@@ -135,8 +133,8 @@ export default {
         query: queryParams
       })
     },
-    async LoadCommits(org, repo, user, index) {
-      this.$bvModal.show(`commit-model-${index}`)
+    async LoadCommits(org, repo, user) {
+      this.$bvModal.show('commit-model')
       const queryParams = this.$route.query;
       await this.$axios
         .get(`${this.$constants.API_URL_PREFIX}/contributions/organizations/${org}/repository/${repo}/member/${user}`, { params: queryParams })
