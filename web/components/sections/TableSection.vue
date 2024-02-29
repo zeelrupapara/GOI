@@ -1,8 +1,8 @@
 
 <template>
   <div>
-    <WidgetTableCard table-name="PR" :table-title="pullRequestTableTitle" :table-details="pullRequestTableDetails" :page-info="pullRequestPaginationInfo" :selected-status="pullRequestSelectedStatus" />
-    <WidgetTableCard table-name="Issue" :table-title="issueTableTitle" :table-details="issueTableDetails" :page-info="issuePaginationInfo" :selected-status="issueSelectedStatus" />
+    <WidgetTableCard class="card" table-name="PR" :table-title="pullRequestTableTitle" :table-details="pullRequestTableDetails" :page-info="pullRequestPaginationInfo" :selected-status="pullRequestSelectedStatus" />
+    <WidgetTableCard class="card" table-name="Issue" :table-title="issueTableTitle" :table-details="issueTableDetails" :page-info="issuePaginationInfo" :selected-status="issueSelectedStatus" />
   </div>
 </template>
 
