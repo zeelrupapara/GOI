@@ -1,16 +1,16 @@
-# Github Analytical Projects Tool (GPAT)
+# GitHub Organization Insight (GOI)
 
-Welcome to Github Analytical Projects Tool (GPAT) - your go-to solution for managing members across multiple organizations on Github.
+Welcome to GitHub Organization Insight (GOI) - your go-to solution for managing members across multiple organizations on Github.
 
 ## Setup Guide
 
-Follow these simple steps to set up and start using GPAT:
+Follow these simple steps to set up and start using GOI:
 
 ### Step 1: Clone the Repository
 
 ```bash
-git clone git@github.com:Improwised/GPAT.git
-cd GPAT
+git clone https://github.com/zeelrupapara/GOI.git
+cd GOI
 ```
 
 ### Step 2: Set Up Github Token
@@ -32,7 +32,7 @@ To start all server (api, ui, database) using docker-compose file
 ```bash
 docker compose up
 ```
-See **GPAT**: http://localhost:80
+See **GOI**: http://localhost:80
 
 **API** (Optional): http://localhost:8080
 **UI** (Optional): http://localhost:5000
@@ -56,6 +56,6 @@ go run main.go github
 
 ## Usage
 
-With the setup complete, you can now use GPAT to manage members across your organizations efficiently.
+With the setup complete, you can now use GOI to manage members across your organizations efficiently.
 
-Feel free to explore additional commands and functionalities provided by GPAT by checking the available options in `go run main.go --help`.
+Feel free to explore additional commands and functionalities provided by GOI by checking the available options in `go run main.go --help`.
