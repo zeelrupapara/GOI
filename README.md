@@ -1,4 +1,5 @@
 # GitHub Organization Insight (GOI)
+![GoI Dashboard](/images/dashboard.png)
 
 Welcome to GitHub Organization Insight (GOI) - your go-to solution for managing members across multiple organizations on Github.
 
