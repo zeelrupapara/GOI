@@ -54,6 +54,11 @@ func Setup(app *fiber.App, db *sql.DB, logger *zap.Logger, config config.AppConf
 		return err
 	}
 
+	err = setupSyncDataController(v1, db, config, logger, middlewares)
+	if err != nil{
+		return err
+	}
+
 	mu.Unlock()
 	return nil
 }
@@ -104,5 +109,15 @@ func setupGithubDataController(v1 fiber.Router, db *sql.DB, config config.AppCon
 	}
 	githubDataRouter := v1.Group("/github")
 	githubDataRouter.Post("/data", githubDataController.GetGithubData)
+	return nil
+}
+
+func setupSyncDataController(v1 fiber.Router, db *sql.DB, config config.AppConfig, logger *zap.Logger, middlewares middlewares.Middleware) error {
+	syncDataController, err := controller.NewSyncController(db, logger)
+	if err != nil {
+		return err
+	}
+	syncDataRouter := v1.Group("/sync")
+	syncDataRouter.Get("/", syncDataController.GetSyncedDateWiseData)
 	return nil
 }

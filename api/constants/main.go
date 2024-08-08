@@ -76,4 +76,7 @@ const (
 
 	// github data
 	ErrGithubData = "Unable to get github data"
+
+	// sync
+	ErrGetSyncData = "Unable to get sync data"
 )

@@ -3,15 +3,36 @@
   <div class="navbar-custom">
     <div class="container-fluid">
       <ul class="list-unstyled topnav-menu float-right mb-0 mx-2">
+        <li class="dropdown d-lg-inline-block">
+          <nuxt-link
+            :to="`/sync`"
+            v-b-tooltip.hover
+            title="Sync History"
+            class="nav-link dropdown-toggle arrow-none waves-effect waves-light"
+            ><i class="fas fa-calendar-check noti-icon"></i
+          ></nuxt-link>
+        </li>
         <li class="dropdown d-lg-inline-block ml-2">
-          <button type="button" v-b-modal.modal-prevent-closing v-b-tooltip.hover title="Fetch Github Data"
-            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
-              class="fas fa-globe noti-icon"></i></button>
+          <button
+            type="button"
+            v-b-modal.modal-prevent-closing
+            v-b-tooltip.hover
+            title="Fetch Github Data"
+            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"
+          >
+            <i class="fas fa-globe noti-icon"></i>
+          </button>
         </li>
         <li class="dropdown d-lg-inline-block">
-          <button type="button" @click="clearFilter" v-b-tooltip.hover title="Reset Filters"
-            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"><i
-              class="fas fa-undo noti-icon"></i></button>
+          <button
+            type="button"
+            @click="clearFilter"
+            v-b-tooltip.hover
+            title="Reset Filters"
+            class="btn btn-sm nav-link dropdown-toggle arrow-none waves-effect waves-light"
+          >
+            <i class="fas fa-undo noti-icon"></i>
+          </button>
         </li>
         <!-- <li class="dropdown d-none d-lg-inline-block mx-2">
           <a v-b-tooltip.hover title="FullScreen" class="nav-link dropdown-toggle arrow-none waves-effect waves-light" data-toggle="fullscreen" href="#"
@@ -55,12 +76,14 @@
 
       <ul class="list-unstyled topnav-menu topnav-menu-left m-0">
         <li>
-          <button class="button-menu-mobile waves-effect waves-light" @click="toggleMenu">
+          <button
+            class="button-menu-mobile waves-effect waves-light"
+            @click="toggleMenu"
+          >
             <i class="fas fa-bars"></i>
           </button>
         </li>
-        <li>
-        </li>
+        <li></li>
       </ul>
       <div class="clearfix"></div>
     </div>
@@ -69,17 +92,17 @@
 </template>
 
 <script>
-import FetchGithubData from '~/components/widgets/WidgetGithubDataCard.vue';
+import FetchGithubData from '~/components/widgets/WidgetGithubDataCard.vue'
 export default {
   components: {
-    FetchGithubData
+    FetchGithubData,
   },
   methods: {
     toggleMenu() {
-      this.$parent.toggleMenu();
+      this.$parent.toggleMenu()
     },
     initFullScreen() {
-      document.body.classList.toggle("fullscreen-enable");
+      document.body.classList.toggle('fullscreen-enable')
       if (
         !document.fullscreenElement &&
         /* alternative standard method */
@@ -88,34 +111,34 @@ export default {
       ) {
         // current working methods
         if (document.documentElement.requestFullscreen) {
-          document.documentElement.requestFullscreen();
+          document.documentElement.requestFullscreen()
         } else if (document.documentElement.mozRequestFullScreen) {
-          document.documentElement.mozRequestFullScreen();
+          document.documentElement.mozRequestFullScreen()
         } else if (document.documentElement.webkitRequestFullscreen) {
           document.documentElement.webkitRequestFullscreen(
             Element.ALLOW_KEYBOARD_INPUT
-          );
+          )
         }
       } else if (document.cancelFullScreen) {
-        document.cancelFullScreen();
+        document.cancelFullScreen()
       } else if (document.mozCancelFullScreen) {
-        document.mozCancelFullScreen();
+        document.mozCancelFullScreen()
       } else if (document.webkitCancelFullScreen) {
-        document.webkitCancelFullScreen();
+        document.webkitCancelFullScreen()
       }
     },
     toggleRightSidebar() {
-      this.$parent.toggleRightSidebar();
+      this.$parent.toggleRightSidebar()
     },
     horizonalmenu() {
-      const element = document.getElementById("topnav-menu-content");
-      element.classList.toggle("show");
+      const element = document.getElementById('topnav-menu-content')
+      element.classList.toggle('show')
     },
     clearFilter() {
       this.$router.push({ path: this.$route.path, query: {} })
-    }
-  }
-};
+    },
+  },
+}
 </script>
 
 <style>
