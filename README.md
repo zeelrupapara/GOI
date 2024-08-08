@@ -30,7 +30,7 @@ echo "GITHUB_TOKEN=<YOUR_GITHUB_TOKEN>" >> ./api/.env.docker
 
 To start all server (api, ui, database) using docker-compose file
 ```bash
-docker compose up
+docker compose up --build
 ```
 See **GOI**: http://localhost:80
 
